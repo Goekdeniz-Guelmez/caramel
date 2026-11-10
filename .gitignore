@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+weights/
+caramel-1/
+runs/
+*.wav
