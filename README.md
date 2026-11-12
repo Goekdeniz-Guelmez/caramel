@@ -158,6 +158,8 @@ The original 11,555 hours were scraped and aren't redistributable, so here is th
 
 Seamless Interaction is non-commercial. If you have LDC access, Fisher English (~2,000 h of two-channel telephone conversations) is the standard addition. Hold out Seamless Interaction's `dev` split as `--dev`.
 
+`prepare.py` also takes your own or synthetic conversations: stereo files, one file per speaker, or a JSONL manifest of utterances with start times that it places on two tracks. It appends to an existing store, so a dataset too big for your disk can be processed one shard at a time. Formats and a laptop-sized walkthrough (proof of concept, fine-tuning `caramel-1`, pretraining) are in [TRAINING_M4_PRO.md](TRAINING_M4_PRO.md).
+
 ```bash
 # conversations: download the tar shards (see the Seamless Interaction README for subsets), untar them, pair the two participants of each interaction
 hf download facebook/seamless-interaction --repo-type dataset --include "naturalistic/train/*" "improvised/train/*" --local-dir raw/seamless
@@ -172,7 +174,7 @@ python prepare.py "raw/medium/**/*.flac" --out data/mono
 
 ### training
 
-The defaults (`--fpb 6000 --accum 8`) give the original recipe's 48k frames per step on one Mac. Lower `--fpb` and raise `--accum` if you run out of memory; across several Macs, divide `--accum` by the number of machines and start with `mlx.launch --hosts mac1,mac2 train.py ...`.
+The defaults (`--fpb 6000 --accum 8`) give the original recipe's 48k frames per step on one Mac. Lower `--fpb` and raise `--accum` if you run out of memory; across several Macs, divide `--accum` by the number of machines and start with `mlx.launch --hosts mac1,mac2 train.py ...`. `--init ./caramel-1` fine-tunes the released model (fresh optimizer) instead of starting from random weights, and `--train_hours N` trains on only the first N hours of each store, for quick proof-of-concept runs.
 
 ```bash
 python train.py --data data/mono --steps 25000 --stop_at 9000 --out runs/s1

@@ -2,7 +2,7 @@ import argparse, json, math, os, queue, threading, time
 from functools import partial
 import numpy as np, mlx.core as mx, mlx.nn as nn, mlx.optimizers as optim
 from mlx.utils import tree_flatten, tree_map, tree_unflatten
-from model import Caramel, Config, save
+from model import Caramel, Config, join_parts, save
 
 CARD, DELAYS = Config.card, Config().delays
 BUCKETS = [750, 1000, 1250, 1500]   # window lengths in frames: 60, 80, 100, 120 s
@@ -12,9 +12,11 @@ BUCKETS = [750, 1000, 1250, 1500]   # window lengths in frames: 60, 80, 100, 120
 # A store is one folder: tokens.bin uint16 [frames, W] frame-major (W = 16 stereo: speaker 1 cb0-7 | speaker 2 cb0-7,
 # or W = 8 mono), index.npy int64 [clips, 2] (offset, length) in frames, and meta.json {"width": W, "frames": total}.
 class TokenStore:
-  def __init__(self, d):
+  def __init__(self, d, hours=0.0):
     meta = json.load(open(os.path.join(d, "meta.json")))
     self.W, self.index = meta["width"], np.load(os.path.join(d, "index.npy"))
+    if hours:   # keep only the first clips, up to `hours` of audio (at least one clip): small proof-of-concept runs
+      self.index = self.index[:max(1, int(np.searchsorted(np.cumsum(self.index[:, 1]), hours * 3600 * 12.5, side="right")))]
     self.tok = np.memmap(os.path.join(d, "tokens.bin"), dtype=np.uint16, mode="r", shape=(meta["frames"], self.W))
     self.cum = np.cumsum(self.index[:, 1])   # clips are drawn proportionally to their length
 
@@ -41,8 +43,8 @@ def delay_window(raw, L, swap):
 # Each batch draws one window length L from BUCKETS and holds frames_per_batch // L windows, so the compiled graphs only ever
 # see 4 shapes. Stores are picked by weight, clips by length, and the window start uniformly. One background thread keeps
 # a few batches ready; a single producer keeps the stream deterministic, so a resumed run sees the same data.
-def batch_stream(dirs, fpb, weights, seed, rank):
-  rng, stores = np.random.default_rng([seed, rank]), [TokenStore(d) for d in dirs]
+def batch_stream(dirs, fpb, weights, seed, rank, hours=0.0):
+  rng, stores = np.random.default_rng([seed, rank]), [TokenStore(d, hours) for d in dirs]
   sw = np.asarray(weights or [s.cum[-1] for s in stores], dtype=np.float64)
   sw /= sw.sum()
   q = queue.Queue(maxsize=8)
@@ -100,7 +102,11 @@ def main(a):
   rank, world = group.rank(), group.size()
   mx.random.seed(a.seed)
   os.makedirs(a.out, exist_ok=True)
-  model = Caramel(Config(**json.loads(a.cfg)))   # float32 master weights, bf16 matmuls
+  cfg = Config.from_dict(json.load(open(os.path.join(a.init, "config.json")))) if a.init else Config(**json.loads(a.cfg))
+  model = Caramel(cfg)   # float32 master weights, bf16 matmuls
+  if a.init:   # fine-tune a model folder (e.g. the caramel-1 release): its weights, a fresh optimizer
+    join_parts(a.init)
+    model.load_weights(os.path.join(a.init, "model.safetensors"), strict=True); model.set_dtype(mx.float32)
   # AdamW (bias-corrected, like PyTorch); weight decay only on matrices, not on norms
   adam = partial(optim.AdamW, learning_rate=a.lr, betas=[0.9, 0.95], eps=1e-8, bias_correction=True)
   opt = optim.MultiOptimizer([adam(weight_decay=a.wd), adam(weight_decay=0.0)], [lambda path, p: p.ndim >= 2])
@@ -125,7 +131,7 @@ def main(a):
 
   evaluate = mx.compile(model.__call__, inputs=model.state)
 
-  data = batch_stream(a.data, a.fpb, a.weights, a.seed + 7919 * start, rank)
+  data = batch_stream(a.data, a.fpb, a.weights, a.seed + 7919 * start, rank, a.train_hours)
   end = a.stop_at or a.steps
   eval_at = (set(range(0, a.steps + 1, a.eval_every)) if a.eval_every else set()) | ({a.stop_at} if a.stop_at else set())
   dev_batches = eval_batches(a.dev, bs=max(1, a.fpb // 1500)) if a.dev else []
@@ -180,10 +186,12 @@ if __name__ == "__main__":
   ap = argparse.ArgumentParser()
   ap.add_argument("--data", nargs="+", required=True, help="token store folders")
   ap.add_argument("--weights", type=float, nargs="*", default=None, help="sampling weight per store (default: by frames)")
+  ap.add_argument("--train_hours", type=float, default=0, help="use only the first N hours of each --data store (0 = all); --dev is never cut")
   ap.add_argument("--out", required=True)
   ap.add_argument("--steps", type=int, required=True, help="end of the LR schedule")
   ap.add_argument("--stop_at", type=int, default=0, help="stop (and save ckpt/) here; the schedule still spans --steps")
   ap.add_argument("--resume", default="", help="ckpt/ folder of the previous stage")
+  ap.add_argument("--init", default="", help="model folder to fine-tune (config.json + model.safetensors); --cfg is ignored")
   ap.add_argument("--sched_start", type=int, default=0, help="restart warmup + cosine at this step")
   ap.add_argument("--fpb", type=int, default=6000, help="frames per micro-batch per process")
   ap.add_argument("--accum", type=int, default=8, help="micro-batches per step; fpb x accum x processes = frames per step (original recipe: 48000)")
