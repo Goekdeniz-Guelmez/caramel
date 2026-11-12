@@ -114,7 +114,14 @@ I spent a lot of time on the training step so the GPUs wouldn't be the bottlenec
 
 The small transformer only attends over 8 tokens, and flash attention works in tiles of 128, so most of that work was wasted, and that one layer was **42% of GPU time**. A custom Triton kernel that packs 2 frames per program took the layer from 6.70 ms to 1.17 ms for forward and backward together. Its outputs and gradients were checked against a float64 reference before it was switched on. The final training step runs at 34.5% of the GPU's peak FLOPs, and going from 1 to 2 GPUs kept 96% of the speed per GPU.
 
-On NVIDIA GPUs, generation uses CUDA graphs, which record a whole frame of GPU work once and then replay it, so there's almost no Python overhead per step. On a Mac the model runs on the Apple GPU without them.
+This repository now runs on MLX only, on the Apple GPU. The numbers above are from the original PyTorch run on H100s, and the MLX code loads the released weights unchanged (same parameter names and layout, 413M parameters). What the MLX port does instead of Triton and CUDA graphs:
+
+- **Fused Metal kernels** for every hot op: `mx.fast.rms_norm`, `mx.fast.rope` and `mx.fast.scaled_dot_product_attention`, for both transformers.
+- **Compiled training step**: forward + backward of a micro-batch and the optimizer update are each one `mx.compile` graph, traced once per window length (4 shapes). Matmuls run in bf16 against float32 master weights, the same mixed precision as the original.
+- **Compiled depth pass**: the 8 codebooks × 6 layers of the small transformer plus top-k sampling for a frame are one compiled graph, so a frame costs a handful of dispatches instead of hundreds of tiny ones.
+- **No host syncs while generating**: sampled tokens stay on the GPU and are fed straight into the next frame, and frame t+1 is built while frame t is still running (`mx.async_eval`). Only `--realtime` waits on each frame, to time it.
+- **Weight-only quantization** for generation (`--bits 8` or `--bits 4`) of every matmul including the per-codebook depth weights. Generation reads every weight every frame, so it is bandwidth bound and fewer bytes means faster frames. 8-bit stays within about 0.5% of bf16 per matmul; 4-bit is about 8% off, so check that it still sounds right before using it.
+- **Multi-Mac data parallel** through `mx.distributed` (`mlx.launch`), with gradient accumulation (`--accum`) to keep the original 48k-frame batch on a single Mac.
 
 ## built with cloudy
 I'm the founder of [Cloudy](https://cloudy.so), and this whole project was built on it. Cloudy is a research platform. You give Cloudy a goal and Cloudy plans experiments, runs them on cloud GPUs, keeps the data and checkpoints in shared storage, and writes up every result along the way. For `caramel-1`, Cloudy found and downloaded the data, built the closeness score and the evaluation, wrote the model, the training loop and the kernels, and ran other experiments on the spare GPUs while this one trained.
@@ -126,26 +133,54 @@ I'm the founder of [Cloudy](https://cloudy.so), and this whole project was built
 ## run it
 
 ```bash
-./setup.sh ./caramel-1    # Python 3.12 venv, PyTorch, transformers, downloads naklecha/caramel-1 from Hugging Face
+./setup.sh ./caramel-1    # Python 3.12 venv, MLX, mlx-audio (Mimi codec), downloads naklecha/caramel-1 from Hugging Face
 source ./.venv/bin/activate
 python generate.py --model ./caramel-1 --seconds 30 --realtime                          # two copies talk, starting from silence
+python generate.py --model ./caramel-1 --seconds 30 --realtime --bits 8                 # 8-bit weights, faster frames
 python generate.py --model ./caramel-1 --prompt opening.wav --seconds 30 --out talk.wav  # continue a real conversation
 ```
 
-`generate.py` picks an NVIDIA GPU, then the Apple GPU on a Mac, then the CPU. It writes a stereo wav (left = speaker A, right = speaker B) plus `_a.wav`, `_b.wav` and `_mix.wav`. A stereo `--prompt` gives one speaker per channel and a mono prompt is speaker A. `--realtime` prints ms per frame, where real time is 80 ms. On an M3 Pro MacBook Pro both copies together take about 17 ms per frame.
+`generate.py` runs on the Apple GPU through MLX and uses the MLX port of Mimi from `mlx-audio` for the codec. It writes a stereo wav (left = speaker A, right = speaker B) plus `_a.wav`, `_b.wav` and `_mix.wav`. A stereo `--prompt` gives one speaker per channel and a mono prompt is speaker A. `--realtime` prints ms per frame, where real time is 80 ms.
 
 ## train it
 
-`train.py` reads a folder of codec tokens: `tokens.bin` (uint16 `[frames, 16]`, speaker 1 codebooks 0-7 then speaker 2 codebooks 0-7, or `[frames, 8]` for one-person speech), `index.npy` (int64 `(offset, length)` per clip) and `meta.json` (`{"width": 16, "frames": N}`).
+`train.py` reads a folder of codec tokens: `tokens.bin` (uint16 `[frames, 16]`, speaker 1 codebooks 0-7 then speaker 2 codebooks 0-7, or `[frames, 8]` for one-person speech), `index.npy` (int64 `(offset, length)` per clip) and `meta.json` (`{"width": 16, "frames": N}`). `prepare.py` builds that folder from audio with Mimi on the GPU.
+
+### data
+
+The original 11,555 hours were scraped and aren't redistributable, so here is the closest public setup:
+
+| stage | dataset | hours | why | license |
+| --- | --- | --- | --- | --- |
+| conversations | [Seamless Interaction](https://huggingface.co/datasets/facebook/seamless-interaction) (Meta) | ~4,000 | two people talking face to face, **one audio file per participant**, so both sides are already on their own track with no separation step | CC-BY-NC 4.0 |
+| conversations, extra | [otoSpeech full-duplex 280h](https://huggingface.co/datasets/otoearth/otoSpeech-full-duplex-280h) | 280 | two-speaker conversations, one speaker per stereo channel | see dataset card |
+| one-person speech | [Libri-Light](https://github.com/facebookresearch/libri-light) `medium` | ~5,200 | long-form public-domain audiobooks, so the 60-120 s training windows are full of speech (segment-level sets like Emilia are mostly padding at these window lengths) | public domain audio |
+
+Seamless Interaction is non-commercial. If you have LDC access, Fisher English (~2,000 h of two-channel telephone conversations) is the standard addition. Hold out Seamless Interaction's `dev` split as `--dev`.
 
 ```bash
-torchrun --nproc_per_node 2 train.py --data data/mono --steps 25000 --stop_at 9000 --out runs/s1
-torchrun --nproc_per_node 2 train.py --data data/stereo data/mono --weights 0.8 0.2 --steps 25000 \
-    --resume runs/s1/ckpt.pt --out runs/s2
-torchrun --nproc_per_node 2 train.py --data data/stereo data/mono --weights 0.8 0.2 --steps 47000 \
-    --resume runs/s2/ckpt.pt --sched_start 25000 --warmup 200 --lr 1.5e-4 \
+# conversations: download the tar shards (see the Seamless Interaction README for subsets), untar them, pair the two participants of each interaction
+hf download facebook/seamless-interaction --repo-type dataset --include "naturalistic/train/*" "improvised/train/*" --local-dir raw/seamless
+find raw/seamless -name "*.tar" -execdir tar -xf {} \;
+python prepare.py "raw/seamless/**/train/**/*.wav" --pair_regex '(V\d+_S\d+_I\d+)_P\d+' --out data/stereo
+python prepare.py "raw/seamless/**/dev/**/*.wav" --pair_regex '(V\d+_S\d+_I\d+)_P\d+' --out data/dev
+python prepare.py "raw/otospeech/**/*.wav" --stereo --out data/stereo_oto     # optional; add it to --data below
+# one-person speech
+curl -L https://dl.fbaipublicfiles.com/librilight/data/medium.tar | tar -x -C raw/
+python prepare.py "raw/medium/**/*.flac" --out data/mono
+```
+
+### training
+
+The defaults (`--fpb 6000 --accum 8`) give the original recipe's 48k frames per step on one Mac. Lower `--fpb` and raise `--accum` if you run out of memory; across several Macs, divide `--accum` by the number of machines and start with `mlx.launch --hosts mac1,mac2 train.py ...`.
+
+```bash
+python train.py --data data/mono --steps 25000 --stop_at 9000 --out runs/s1
+python train.py --data data/stereo data/mono --weights 0.8 0.2 --steps 25000 --resume runs/s1/ckpt --out runs/s2
+python train.py --data data/stereo data/mono --weights 0.8 0.2 --steps 47000 \
+    --resume runs/s2/ckpt --sched_start 25000 --warmup 200 --lr 1.5e-4 \
     --dev data/dev --eval_every 1000 --patience 2 --save_best --out runs/s3
-python model.py runs/s3/best.pt ./caramel-1    # checkpoint -> config.json + model.safetensors
+python generate.py --model runs/s3/best    # best/ is already a model folder: config.json + model.safetensors (bf16)
 ```
 
 ## license

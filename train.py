@@ -1,10 +1,11 @@
-import argparse, json, math, os, threading, time
-import numpy as np, torch, torch.distributed as dist
-from model import Caramel, Config
+import argparse, json, math, os, queue, threading, time
+from functools import partial
+import numpy as np, mlx.core as mx, mlx.nn as nn, mlx.optimizers as optim
+from mlx.utils import tree_flatten, tree_map, tree_unflatten
+from model import Caramel, Config, save
 
 CARD, DELAYS = Config.card, Config().delays
 BUCKETS = [750, 1000, 1250, 1500]   # window lengths in frames: 60, 80, 100, 120 s
-PEAK_BF16 = 989.4e12               # H100 SXM dense bf16, for MFU
 
 
 # ── data ──
@@ -15,11 +16,13 @@ class TokenStore:
     meta = json.load(open(os.path.join(d, "meta.json")))
     self.W, self.index = meta["width"], np.load(os.path.join(d, "index.npy"))
     self.tok = np.memmap(os.path.join(d, "tokens.bin"), dtype=np.uint16, mode="r", shape=(meta["frames"], self.W))
+    self.cum = np.cumsum(self.index[:, 1])   # clips are drawn proportionally to their length
 
+  def clip(self, rng): return int(np.searchsorted(self.cum, rng.random() * self.cum[-1], side="right"))
   def window(self, i, start, L): return self.tok[self.index[i, 0] + start:self.index[i, 0] + start + L]
 
 
-# raw [L, W] -> seq [L+1, 16] int16, ready for Caramel.forward: start token first, then each codebook shifted by its delay
+# raw [L, W] -> seq [L+1, 16] int16, ready for Caramel.__call__: start token first, then each codebook shifted by its delay
 # with the start token as filler. A mono clip gets -1 (no input, no loss) for the second speaker. swap puts speaker 2 first,
 # so the model learns both sides of every conversation.
 def delay_window(raw, L, swap):
@@ -36,35 +39,36 @@ def delay_window(raw, L, swap):
 
 
 # Each batch draws one window length L from BUCKETS and holds frames_per_batch // L windows, so the compiled graphs only ever
-# see 4 shapes. Stores are picked by weight, clips by length, and the window start uniformly.
-class BatchStream(torch.utils.data.IterableDataset):
-  def __init__(self, dirs, fpb, weights=None, seed=0, rank=0): self.dirs, self.fpb, self.weights, self.seed, self.rank = dirs, fpb, weights, seed, rank
+# see 4 shapes. Stores are picked by weight, clips by length, and the window start uniformly. One background thread keeps
+# a few batches ready; a single producer keeps the stream deterministic, so a resumed run sees the same data.
+def batch_stream(dirs, fpb, weights, seed, rank):
+  rng, stores = np.random.default_rng([seed, rank]), [TokenStore(d) for d in dirs]
+  sw = np.asarray(weights or [s.cum[-1] for s in stores], dtype=np.float64)
+  sw /= sw.sum()
+  q = queue.Queue(maxsize=8)
 
-  def __iter__(self):
-    wi = torch.utils.data.get_worker_info()
-    rng, stores = np.random.default_rng([self.seed, self.rank, wi.id if wi else 0]), [TokenStore(d) for d in self.dirs]
-    sw = np.asarray(self.weights or [s.index[:, 1].sum() for s in stores], dtype=np.float64)
-    sw /= sw.sum()
+  def produce():
     while True:
       L, seqs = int(rng.choice(BUCKETS)), []
-      for _ in range(max(1, self.fpb // L)):
+      for _ in range(max(1, fpb // L)):
         s = stores[rng.choice(len(stores), p=sw)]
-        lens = s.index[:, 1]
-        i = int(rng.choice(len(lens), p=lens / lens.sum()))
-        start = int(rng.integers(0, max(1, lens[i] - L + 1)))
+        i = s.clip(rng)
+        start = int(rng.integers(0, max(1, s.index[i, 1] - L + 1)))
         seqs.append(delay_window(np.asarray(s.window(i, start, L)), L, bool(rng.integers(2))))
-      yield torch.from_numpy(np.stack(seqs))
+      q.put(np.stack(seqs))
+
+  threading.Thread(target=produce, daemon=True).start()
+  while True: yield q.get()
 
 
 # fixed held-out windows (fixed seed), each scored in both speaker orders; same shape as a training bucket so graphs are reused
 def eval_batches(d, n=64, L=1500, bs=16, seed=12345):
   s, rng, seqs = TokenStore(d), np.random.default_rng(seed), []
-  lens = s.index[:, 1]
   for _ in range(n):
-    i = int(rng.choice(len(lens), p=lens / lens.sum()))
-    raw = np.asarray(s.window(i, int(rng.integers(0, max(1, lens[i] - L + 1))), L))
+    i = s.clip(rng)
+    raw = np.asarray(s.window(i, int(rng.integers(0, max(1, s.index[i, 1] - L + 1))), L))
     seqs += [delay_window(raw, L, False), delay_window(raw, L, True)]
-  return [torch.from_numpy(np.stack(seqs[k:k + bs])) for k in range(0, len(seqs), bs)]
+  return [np.stack(seqs[k:k + bs]) for k in range(0, len(seqs), bs)]
 
 
 # ── schedule ──
@@ -75,97 +79,101 @@ def lr_at(step, a):
   p = (step - a.warmup) / max(1, a.steps - a.sched_start - a.warmup)
   return a.lr * (0.1 + 0.9 * 0.5 * (1 + math.cos(math.pi * min(1.0, p))))
 
-# training FLOPs per frame: 6 x matmul params (forward + backward) + causal attention
-def flops_per_frame(m, T):
-  c = m.cfg
-  tparams = sum(p.numel() for n, p in m.layers.named_parameters() if "norm" not in n)
-  dparams = sum(p.numel() for n, p in m.dep_layers.named_parameters() if "norm" not in n) // c.dep_q
-  attn = c.num_layers * 2 * T * c.dim + c.dep_layers * 2 * c.dep_q * c.dep_q * c.dep_dim / 2
-  return 6 * (tparams + c.dep_q * (dparams + c.dim * c.dep_dim + c.dep_dim * c.card)) + 3 * attn
+
+# ── checkpoints: a folder with the float32 weights, the optimizer state and the step ──
+def save_ckpt(path, model, opt, step):
+  os.makedirs(path, exist_ok=True)
+  mx.save_safetensors(os.path.join(path, "weights.safetensors"), dict(tree_flatten(model.parameters())))
+  mx.save_safetensors(os.path.join(path, "opt.safetensors"), dict(tree_flatten(opt.state)))
+  json.dump({"step": step, "cfg": model.cfg.__dict__}, open(os.path.join(path, "meta.json"), "w"))
+
+
+def load_ckpt(path, model, opt):
+  model.load_weights(os.path.join(path, "weights.safetensors"), strict=True)
+  opt.state = tree_unflatten(list(mx.load(os.path.join(path, "opt.safetensors")).items()))
+  return json.load(open(os.path.join(path, "meta.json")))["step"]
 
 
 # ── train ──
 def main(a):
-  ddp = "RANK" in os.environ
-  if ddp: dist.init_process_group("nccl"); torch.cuda.set_device(int(os.environ["LOCAL_RANK"]))
-  rank, world = (dist.get_rank(), dist.get_world_size()) if ddp else (0, 1)
-  cuda = torch.cuda.is_available()
-  dev = torch.device("cuda", int(os.environ.get("LOCAL_RANK", 0))) if cuda else torch.device("cpu")
-  torch.manual_seed(a.seed)
-  torch.backends.cuda.matmul.allow_tf32 = torch.backends.cudnn.allow_tf32 = True
+  group = mx.distributed.init()   # multi-Mac data parallel when started with mlx.launch, a no-op group of 1 otherwise
+  rank, world = group.rank(), group.size()
+  mx.random.seed(a.seed)
   os.makedirs(a.out, exist_ok=True)
-  cfg = Config(**json.loads(a.cfg))
-  model = Caramel(cfg).to(dev)
-  if cuda:
-    # compile each block on its own; static shapes (one graph per length bucket) keep recompiles to 4
-    torch._dynamo.config.automatic_dynamic_shapes, torch._dynamo.config.cache_size_limit = False, 16
-    for blk in list(model.layers) + list(model.dep_layers): blk.compile()
-    model.embed, model.head_ce = torch.compile(model.embed), torch.compile(model.head_ce)
-  # AdamW; weight decay only on matrices, not on norms
-  params = [p for p in model.parameters() if p.dim() >= 2], [p for p in model.parameters() if p.dim() < 2]
-  opt = torch.optim.AdamW([{"params": params[0], "weight_decay": a.wd}, {"params": params[1], "weight_decay": 0.0}],
-                          lr=a.lr, betas=(0.9, 0.95), eps=1e-8, fused=cuda)
-  start = 0
-  if a.resume:   # the next stage keeps the weights, the optimizer state and the RNG of the previous one
-    ck = torch.load(a.resume, map_location=dev, weights_only=False)
-    model.load_state_dict(ck["model"]); opt.load_state_dict(ck["opt"]); start = ck["step"]
-    torch.set_rng_state(ck["rng_cpu"].cpu())
-    if cuda and ck.get("rng_cuda") is not None: torch.cuda.set_rng_state(ck["rng_cuda"].cpu())
-  # DDP: gradients are all-reduced in 64 MB buckets while the backward pass is still running
-  dmodel = torch.nn.parallel.DistributedDataParallel(model, device_ids=[dev.index], bucket_cap_mb=64, gradient_as_bucket_view=True, static_graph=True) if ddp else model
-  if rank == 0: print(f"params {sum(p.numel() for p in model.parameters()) / 1e6:.1f}M  cfg {json.dumps(cfg.__dict__)}", flush=True)
+  model = Caramel(Config(**json.loads(a.cfg)))   # float32 master weights, bf16 matmuls
+  # AdamW (bias-corrected, like PyTorch); weight decay only on matrices, not on norms
+  adam = partial(optim.AdamW, learning_rate=a.lr, betas=[0.9, 0.95], eps=1e-8, bias_correction=True)
+  opt = optim.MultiOptimizer([adam(weight_decay=a.wd), adam(weight_decay=0.0)], [lambda path, p: p.ndim >= 2])
+  opt.init(model.trainable_parameters())
+  start = load_ckpt(a.resume, model, opt) if a.resume else 0   # the next stage keeps the weights and the optimizer state
+  mx.eval(model.parameters(), opt.state)
+  if rank == 0: print(f"params {sum(v.size for _, v in tree_flatten(model.parameters())) / 1e6:.1f}M  world {world}  cfg {json.dumps(model.cfg.__dict__)}", flush=True)
 
-  loader = iter(torch.utils.data.DataLoader(BatchStream(a.data, a.fpb, a.weights, a.seed + 7919 * start, rank), batch_size=None,
-                num_workers=a.workers, pin_memory=cuda, prefetch_factor=4 if a.workers else None, persistent_workers=a.workers > 0))
+  # compiled graphs: one per window length (4 shapes). Forward + backward of a micro-batch, then the averaged, clipped update.
+  state = [model.state, opt.state]
+  loss_grad = nn.value_and_grad(model, model.__call__)
+
+  @partial(mx.compile, inputs=model.state, outputs=model.state)   # value_and_grad writes the params back into the model
+  def micro(seq): return loss_grad(seq)
+
+  @partial(mx.compile, inputs=state, outputs=state)
+  def update(grads):
+    if world > 1: grads = nn.average_gradients(grads)
+    grads, gn = optim.clip_grad_norm(grads, a.clip)
+    opt.update(model, grads)
+    return gn
+
+  evaluate = mx.compile(model.__call__, inputs=model.state)
+
+  data = batch_stream(a.data, a.fpb, a.weights, a.seed + 7919 * start, rank)
   end = a.stop_at or a.steps
   eval_at = (set(range(0, a.steps + 1, a.eval_every)) if a.eval_every else set()) | ({a.stop_at} if a.stop_at else set())
   dev_batches = eval_batches(a.dev, bs=max(1, a.fpb // 1500)) if a.dev else []
-  amp = lambda: torch.autocast(dev.type, dtype=torch.bfloat16, enabled=cuda)
-  log, evals, best, savers, stop = open(os.path.join(a.out, f"log_rank{rank}.jsonl"), "a"), [], [], [], torch.zeros(1, device=dev)
+  log, evals, best = open(os.path.join(a.out, f"log_rank{rank}.jsonl"), "a"), [], []
 
+  # every rank holds the same weights, so every rank computes the same dev loss and makes the same stop decision
   def do_eval(s):
     model.eval()
-    with torch.no_grad(), amp(): res = [model(b.to(dev).long()) for b in dev_batches]
+    res = [evaluate(mx.array(b, mx.int32)) for b in dev_batches]
+    mx.eval(res)
     model.train()
-    e = {"step": s, "dev_loss": float(np.mean([l.item() for l, _ in res])), "dev_cb": torch.stack([c.float().cpu() for _, c in res]).mean(0).tolist()}
-    evals.append(e); log.write(json.dumps({"eval": e}) + "\n")
-    if rank == 0:
-      print(f"EVAL step {s} dev_loss {e['dev_loss']:.4f}", flush=True)
-      if a.save_best and (not best or e["dev_loss"] < best[0]):   # best.pt (weights only) is written in the background
-        best[:] = [e["dev_loss"], s]
-        sd = {k: v.detach().to("cpu", copy=True) for k, v in model.state_dict().items()}
-        if savers: savers[-1].join()
-        savers.append(threading.Thread(target=torch.save, args=({"model": sd, "step": s, "dev_loss": e["dev_loss"], "cfg": cfg.__dict__}, os.path.join(a.out, "best.pt"))))
-        savers[-1].start()
-      d = [x["dev_loss"] for x in evals[-(a.patience + 1):]]
-      if a.patience and len(d) == a.patience + 1 and all(d[i + 1] > d[i] for i in range(a.patience)): stop.fill_(1); print(f"early stop at step {s}", flush=True)
-    if ddp: dist.broadcast(stop, 0)
+    e = {"step": s, "dev_loss": float(np.mean([l.item() for l, _ in res])), "dev_cb": np.mean([np.array(c) for _, c in res], 0).tolist()}
+    evals.append(e); log.write(json.dumps({"eval": e}) + "\n"); log.flush()
+    if rank == 0: print(f"EVAL step {s} dev_loss {e['dev_loss']:.4f}", flush=True)
+    if a.save_best and (not best or e["dev_loss"] < best[0]):
+      best[:] = [e["dev_loss"], s]
+      if rank == 0: save(model, os.path.join(a.out, "best"))   # bf16 release folder: config.json + model.safetensors
+    d = [x["dev_loss"] for x in evals[-(a.patience + 1):]]
+    stop = a.patience and len(d) == a.patience + 1 and all(d[i + 1] > d[i] for i in range(a.patience))
+    if stop and rank == 0: print(f"early stop at step {s}", flush=True)
+    return stop
 
   t_last = time.perf_counter()
   for step in range(start, end):
     if step in eval_at and dev_batches:
-      do_eval(step); t_last = time.perf_counter()
-      if stop.item(): end = step; break
-    seq = next(loader).to(dev, non_blocking=True).long()
-    for g in opt.param_groups: g["lr"] = lr_at(step, a)
-    with amp(): loss, per_cb = dmodel(seq)
-    loss.backward()
-    gn = torch.nn.utils.clip_grad_norm_(model.parameters(), a.clip)
-    opt.step(); opt.zero_grad(set_to_none=True)
-    lv, t1 = loss.item(), time.perf_counter()
+      if do_eval(step): end = step; break
+      t_last = time.perf_counter()
+    opt.learning_rate = lr_at(step, a)
+    grads, loss, per_cb, frames = None, 0.0, 0.0, 0
+    for _ in range(a.accum):
+      seq = next(data)
+      (l, cb), g = micro(mx.array(seq, mx.int32))
+      grads = g if grads is None else tree_map(mx.add, grads, g)
+      loss, per_cb, frames = loss + l, per_cb + cb, frames + seq.shape[0] * (seq.shape[1] - 1)
+      mx.eval(grads, loss, per_cb)   # bound memory to one micro-batch of activations
+    if a.accum > 1: grads = tree_map(lambda g: g / a.accum, grads)
+    gn = update(grads)
+    mx.eval(model.parameters(), opt.state, gn)
+    t1 = time.perf_counter()
     dt, t_last = t1 - t_last, t1
-    frames = seq.shape[0] * (seq.shape[1] - 1)
-    rec = {"step": step + 1, "loss": lv, "cb": [round(x, 4) for x in per_cb.tolist()], "gn": gn.item(), "lr": lr_at(step, a), "dt": dt,
-           "frames_s": frames / dt, "mfu": flops_per_frame(model, seq.shape[1] - 1) * frames / dt / PEAK_BF16}
+    lv, cbs = loss.item() / a.accum, [round(x / a.accum, 4) for x in per_cb.tolist()]
+    rec = {"step": step + 1, "loss": lv, "cb": cbs, "gn": gn.item(), "lr": lr_at(step, a), "dt": dt, "frames_s": frames * world / dt}
     log.write(json.dumps(rec) + "\n")
     if rank == 0 and (step % 10 == 0 or step + 1 == end):
-      print(f"step {step + 1} loss {lv:.4f} cb0 {rec['cb'][0]:.3f} lr {rec['lr']:.2e} dt {dt * 1e3:.0f}ms frames/s {rec['frames_s']:.0f} mfu {rec['mfu'] * 100:.1f}%", flush=True)
-    if step + 1 == end and rank == 0:
-      torch.save({"model": model.state_dict(), "opt": opt.state_dict(), "step": step + 1, "cfg": cfg.__dict__, "rng_cpu": torch.get_rng_state(),
-                  "rng_cuda": torch.cuda.get_rng_state() if cuda else None}, os.path.join(a.out, "ckpt.pt"))
-  if end in eval_at and dev_batches and not stop.item(): do_eval(end)
-  for t in savers: t.join()
-  if ddp: dist.destroy_process_group()
+      log.flush()
+      print(f"step {step + 1} loss {lv:.4f} cb0 {cbs[0]:.3f} lr {rec['lr']:.2e} dt {dt * 1e3:.0f}ms frames/s {rec['frames_s']:.0f}", flush=True)
+    if step + 1 == end and rank == 0: save_ckpt(os.path.join(a.out, "ckpt"), model, opt, step + 1)
+  if end in eval_at and dev_batches and not (evals and evals[-1]["step"] == end): do_eval(end)
 
 
 if __name__ == "__main__":
@@ -174,13 +182,14 @@ if __name__ == "__main__":
   ap.add_argument("--weights", type=float, nargs="*", default=None, help="sampling weight per store (default: by frames)")
   ap.add_argument("--out", required=True)
   ap.add_argument("--steps", type=int, required=True, help="end of the LR schedule")
-  ap.add_argument("--stop_at", type=int, default=0, help="stop (and save ckpt.pt) here; the schedule still spans --steps")
-  ap.add_argument("--resume", default="", help="ckpt.pt of the previous stage")
+  ap.add_argument("--stop_at", type=int, default=0, help="stop (and save ckpt/) here; the schedule still spans --steps")
+  ap.add_argument("--resume", default="", help="ckpt/ folder of the previous stage")
   ap.add_argument("--sched_start", type=int, default=0, help="restart warmup + cosine at this step")
-  ap.add_argument("--fpb", type=int, default=24000, help="frames per batch per GPU")
+  ap.add_argument("--fpb", type=int, default=6000, help="frames per micro-batch per process")
+  ap.add_argument("--accum", type=int, default=8, help="micro-batches per step; fpb x accum x processes = frames per step (original recipe: 48000)")
   ap.add_argument("--lr", type=float, default=3e-4); ap.add_argument("--warmup", type=int, default=50)
   ap.add_argument("--wd", type=float, default=0.1); ap.add_argument("--clip", type=float, default=1.0)
-  ap.add_argument("--seed", type=int, default=0); ap.add_argument("--workers", type=int, default=6)
+  ap.add_argument("--seed", type=int, default=0)
   ap.add_argument("--dev", default="", help="held-out store for dev loss")
   ap.add_argument("--eval_every", type=int, default=0); ap.add_argument("--patience", type=int, default=0); ap.add_argument("--save_best", action="store_true")
   ap.add_argument("--cfg", default="{}", help="json overrides for Config")

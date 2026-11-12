@@ -1,8 +1,9 @@
-import glob, hashlib, json, math, os, re, shutil, sys
+import json, math, os, sys
 from dataclasses import dataclass, field, asdict
-import torch, torch.nn as nn, torch.nn.functional as F
-from safetensors.torch import load_file, save_file
-from kernels import dep_attn, rms_norm, add_rms_norm, rms_norm_ref
+from functools import partial
+import mlx.core as mx, mlx.nn as nn
+
+BF16 = mx.bfloat16   # matmul / attention dtype; training keeps float32 master weights and a float32 temporal residual stream
 
 
 @dataclass
@@ -19,67 +20,81 @@ class Config:
 
 
 def _hidden(dim, scale): return 2 * int(scale * dim) // 3   # SiLU-gated FFN: two thirds of a plain FFN's width, same params
-def _trunc_normal(w, fan_in): std = 1 / math.sqrt(fan_in); nn.init.trunc_normal_(w, std=std, a=-3 * std, b=3 * std)
+def _trunc_normal(shape, fan_in): return mx.random.truncated_normal(-3.0, 3.0, shape) / math.sqrt(fan_in)
+
+# RMSNorm in float32 (fused Metal kernel), output in the matmul dtype
+def norm(x, w, eps=1e-5): return mx.fast.rms_norm(x, w.astype(x.dtype), eps).astype(BF16)
+def swiglu(x): a, b = mx.split(x, 2, axis=-1); return nn.silu(a) * b
 
 
 class RMSNorm(nn.Module):
-  def __init__(self, dim): super().__init__(); self.weight = nn.Parameter(torch.ones(dim))
-  def forward(self, x): return rms_norm_ref(x, self.weight)
+  def __init__(self, dim): super().__init__(); self.weight = mx.ones((dim,))
 
 
-def rope_tables(T, hd, max_period, device):
-  ang = torch.arange(T, device=device, dtype=torch.float32)[:, None] * torch.exp(torch.arange(0, hd, 2, device=device, dtype=torch.float32) * (-math.log(max_period) / hd))
-  return ang.cos(), ang.sin()   # [T, hd/2]
+# bias-free linear whose weight is cast to the input dtype, so float32 master weights run bf16 matmuls.
+# Subclasses nn.Linear so nn.quantize turns it into a QuantizedLinear for generation.
+class Linear(nn.Linear):
+  def __init__(self, din, dout): super().__init__(din, dout, bias=False); self.weight = _trunc_normal((dout, din), din)
+  def __call__(self, x): return x @ self.weight.astype(x.dtype).T
 
-# rotary position embedding on interleaved pairs (2i, 2i+1): each pair is rotated by an angle that grows with the frame index
-def apply_rope(x, cos, sin):
-  xf = x.float().view(*x.shape[:-1], -1, 2)
-  xr, xi, c, s = xf[..., 0], xf[..., 1], cos[:, None, :], sin[:, None, :]
-  return torch.stack([xr * c - xi * s, xr * s + xi * c], dim=-1).view_as(x).to(x.dtype)
+
+# K independent linears, one per codebook: x [K, N, din] @ weight [K, din, dout] is one batched matmul
+class MultiLinear(nn.Module):
+  def __init__(self, K, din, dout): super().__init__(); self.weight = _trunc_normal((K, din, dout), din)
+  def __call__(self, x): return x @ self.weight.astype(x.dtype)
+  def one(self, x, k): return x @ self.weight[k].astype(x.dtype)
+
+  # same input for all K: one [N, din] @ [din, K*dout] matmul -> [K, N, dout]
+  def fan_out(self, x):
+    K, din, dout = self.weight.shape
+    w = self.weight.transpose(1, 0, 2).reshape(din, K * dout).astype(x.dtype)
+    return (x @ w).reshape(x.shape[0], K, dout).transpose(1, 0, 2)
+
+  def to_quantized(self, group_size=32, bits=8, mode="affine"): return QuantizedMultiLinear(self.weight, group_size, bits)
+
+
+# generation only: per-codebook weights stored transposed and quantized, used one codebook at a time
+class QuantizedMultiLinear(nn.Module):
+  def __init__(self, w, group_size, bits):
+    super().__init__()
+    self.group_size, self.bits = group_size, bits
+    self.weight, self.scales, self.biases = mx.quantize(w.swapaxes(1, 2), group_size, bits)
+    self.freeze()
+
+  def one(self, x, k): return mx.quantized_matmul(x, self.weight[k], self.scales[k], self.biases[k], transpose=True, group_size=self.group_size, bits=self.bits)
 
 
 # ── temporal transformer: one position per 80 ms frame, causal over time ──
 class TemporalBlock(nn.Module):
   def __init__(self, c: Config):
     super().__init__()
-    d, self.h, hid = c.dim, c.num_heads, _hidden(c.dim, c.hidden_scale)
+    d, hid = c.dim, _hidden(c.dim, c.hidden_scale)
+    self.h, self.hd, self.base = c.num_heads, d // c.num_heads, c.max_period
     self.norm1, self.norm2 = RMSNorm(d), RMSNorm(d)
-    self.in_proj, self.out_proj = nn.Linear(d, 3 * d, bias=False), nn.Linear(d, d, bias=False)   # in_proj rows [q | k | v]
-    self.lin_in, self.lin_out = nn.Linear(d, 2 * hid, bias=False), nn.Linear(hid, d, bias=False)
+    self.in_proj, self.out_proj = Linear(d, 3 * d), Linear(d, d)   # in_proj rows [q | k | v]
+    self.lin_in, self.lin_out = Linear(d, 2 * hid), Linear(hid, d)
 
-  def ffn(self, x): a, b = self.lin_in(x).chunk(2, dim=-1); return self.lin_out(F.silu(a) * b)
-  def qkv(self, x): B, T, _ = x.shape; return self.in_proj(x).view(B, T, 3, self.h, -1).unbind(2)
+  # -> q, k, v [B, H, T, hd] with rotary embedding on interleaved pairs (2i, 2i+1) starting at frame `offset`
+  def qkv(self, x, offset):
+    B, T, _ = x.shape
+    q, k, v = self.in_proj(norm(x, self.norm1.weight)).reshape(B, T, 3, self.h, self.hd).transpose(2, 0, 3, 1, 4)
+    rope = partial(mx.fast.rope, dims=self.hd, traditional=True, base=self.base, scale=1.0, offset=offset)
+    return rope(q), rope(k), v
 
-  def forward(self, x, cos, sin):
-    B, T, D = x.shape
-    q, k, v = self.qkv(rms_norm(x, self.norm1.weight))
-    q, k = apply_rope(q, cos, sin), apply_rope(k, cos, sin)
-    o = F.scaled_dot_product_attention(q.transpose(1, 2), k.transpose(1, 2), v.transpose(1, 2), is_causal=True)
-    x, h = add_rms_norm(x, self.out_proj(o.transpose(1, 2).reshape(B, T, D)), self.norm2.weight)
-    return x + self.ffn(h)
+  def finish(self, x, o):
+    B, H, T, hd = o.shape
+    x = x + self.out_proj(o.transpose(0, 2, 1, 3).reshape(B, T, H * hd))
+    return x + self.lin_out(swiglu(self.lin_in(norm(x, self.norm2.weight))))
 
-  # one frame: x [B, 1, D]; kc/vc [B, H, Tmax, hd] preallocated caches written at pos, so every shape stays fixed (CUDA graph safe)
-  def step(self, x, cos, sin, kc, vc, pos, mask):
-    B, T, D = x.shape
-    q, k, v = self.qkv(self.norm1(x))
-    q, k = apply_rope(q, cos, sin), apply_rope(k, cos, sin)
-    kc.index_copy_(2, pos.view(1), k.transpose(1, 2)); vc.index_copy_(2, pos.view(1), v.transpose(1, 2))
-    o = F.scaled_dot_product_attention(q.transpose(1, 2), kc, vc, attn_mask=mask)
-    x = x + self.out_proj(o.transpose(1, 2).reshape(B, T, D))
-    return x + self.ffn(self.norm2(x))
+  def __call__(self, x):
+    q, k, v = self.qkv(x, 0)
+    return self.finish(x, mx.fast.scaled_dot_product_attention(q, k, v, scale=self.hd ** -0.5, mask="causal"))
 
-
-# K independent linears, one per codebook, applied to x [K, N, din] -> [K, N, dout] as a single batched matmul
-class MultiLinear(nn.Module):
-  def __init__(self, K, din, dout): super().__init__(); self.weight = nn.Parameter(torch.empty(K, din, dout)); _trunc_normal(self.weight, din)
-  def forward(self, x): return torch.bmm(x, self.weight if torch.is_autocast_enabled() else self.weight.to(x.dtype))
-  def one(self, x, k): return x @ (self.weight[k] if torch.is_autocast_enabled() else self.weight[k].to(x.dtype))
-
-  # same input for all K: one [N, din] @ [din, K*dout] matmul -> [K, N, dout]
-  def fan_out(self, x):
-    K, din, dout = self.weight.shape
-    w = self.weight.permute(1, 0, 2).reshape(din, K * dout)
-    return (x @ (w if torch.is_autocast_enabled() else w.to(x.dtype))).view(x.shape[0], K, dout).transpose(0, 1)
+  # one frame at position pos: x [B, 1, D]; kc/vc [B, H, Tmax, hd] preallocated, written in place, read up to pos
+  def step(self, x, kc, vc, pos):
+    q, k, v = self.qkv(x, pos)
+    kc[:, :, pos:pos + 1], vc[:, :, pos:pos + 1] = k, v
+    return self.finish(x, mx.fast.scaled_dot_product_attention(q, kc[:, :, :pos + 1], vc[:, :, :pos + 1], scale=self.hd ** -0.5))
 
 
 # ── depth transformer: within one frame, predicts codebook k from the frame's hidden state and codebooks 0..k-1 ──
@@ -87,27 +102,28 @@ class MultiLinear(nn.Module):
 class DepBlock(nn.Module):
   def __init__(self, c: Config):
     super().__init__()
-    K, d, self.h, hid = c.dep_q, c.dep_dim, c.dep_heads, _hidden(c.dep_dim, c.dep_hidden_scale)
+    K, d, hid = c.dep_q, c.dep_dim, _hidden(c.dep_dim, c.dep_hidden_scale)
+    self.h, self.hd = c.dep_heads, d // c.dep_heads
     self.norm1, self.norm2 = RMSNorm(d), RMSNorm(d)
     self.in_proj, self.out_proj = MultiLinear(K, d, 3 * d), MultiLinear(K, d, d)
     self.lin_in, self.lin_out = MultiLinear(K, d, 2 * hid), MultiLinear(K, hid, d)
 
   # x [Kq, N, d]: all frames of the batch at once, the 8 codebooks as the sequence
-  def forward(self, x):
-    o = dep_attn(self.in_proj(rms_norm(x, self.norm1.weight)), self.h)
-    x, h = add_rms_norm(x, self.out_proj(o), self.norm2.weight)
-    a, b = self.lin_in(h).chunk(2, dim=-1)
-    return x + self.lin_out(F.silu(a) * b)
+  def __call__(self, x):
+    K, N, d = x.shape
+    q, k, v = self.in_proj(norm(x, self.norm1.weight)).reshape(K, N, 3, self.h, self.hd).transpose(2, 1, 3, 0, 4)   # [N, H, Kq, hd]
+    o = mx.fast.scaled_dot_product_attention(q, k, v, scale=self.hd ** -0.5, mask="causal")
+    x = x + self.out_proj(o.transpose(2, 0, 1, 3).reshape(K, N, d))
+    return x + self.lin_out(swiglu(self.lin_in(norm(x, self.norm2.weight))))
 
-  # x [B, d] for codebook k; kc/vc [B, H, Kq, hd] hold codebooks 0..k-1 of this frame
-  def step(self, x, k, kc, vc):
+  # x [B, d] for codebook k (a Python int); ks/vs hold the [B, H, 1, hd] keys/values of codebooks 0..k-1 and are appended to
+  def step(self, x, k, ks, vs):
     B, d = x.shape
-    q, k_, v = self.in_proj.one(self.norm1(x), k).view(B, 3, self.h, -1).unbind(1)
-    kc[:, :, k], vc[:, :, k] = k_, v
-    o = F.scaled_dot_product_attention(q[:, :, None], kc[:, :, :k + 1], vc[:, :, :k + 1])
+    q, k_, v = self.in_proj.one(norm(x, self.norm1.weight), k).reshape(B, 3, self.h, 1, self.hd).transpose(1, 0, 2, 3, 4)
+    ks.append(k_); vs.append(v)
+    o = mx.fast.scaled_dot_product_attention(q, mx.concatenate(ks, 2), mx.concatenate(vs, 2), scale=self.hd ** -0.5)
     x = x + self.out_proj.one(o.reshape(B, d), k)
-    a, b = self.lin_in.one(self.norm2(x), k).chunk(2, dim=-1)
-    return x + self.lin_out.one(F.silu(a) * b, k)
+    return x + self.lin_out.one(swiglu(self.lin_in.one(norm(x, self.norm2.weight), k)), k)
 
 
 class Caramel(nn.Module):
@@ -115,121 +131,121 @@ class Caramel(nn.Module):
     super().__init__()
     self.cfg, C, Kq = cfg, cfg.card + 1, cfg.dep_q   # token id == card is the "start / delay filler" token
     # all 16 input codebooks share one flat embedding table (row = k * C + token): one gather, then a sum over codebooks
-    self.emb = nn.Embedding(cfg.n_q * C, cfg.dim)
-    self.register_buffer("emb_offsets", torch.arange(cfg.n_q) * C, persistent=False)
-    self.layers = nn.ModuleList([TemporalBlock(cfg) for _ in range(cfg.num_layers)])
+    self.emb = nn.Embedding(cfg.n_q * C, cfg.dim); self.emb.weight = _trunc_normal(self.emb.weight.shape, cfg.dim)
+    self.layers = [TemporalBlock(cfg) for _ in range(cfg.num_layers)]
     self.out_norm = RMSNorm(cfg.dim)
     self.dep_in = MultiLinear(Kq, cfg.dim, cfg.dep_dim)
     # embeddings of codebooks 0..6, fed into depth steps 1..7
-    self.dep_emb = nn.Embedding((Kq - 1) * C, cfg.dep_dim)
-    self.register_buffer("dep_offsets", torch.arange(Kq - 1) * C, persistent=False)
-    self.dep_layers = nn.ModuleList([DepBlock(cfg) for _ in range(cfg.dep_layers)])
+    self.dep_emb = nn.Embedding((Kq - 1) * C, cfg.dep_dim); self.dep_emb.weight = _trunc_normal(self.dep_emb.weight.shape, cfg.dep_dim)
+    self.dep_layers = [DepBlock(cfg) for _ in range(cfg.dep_layers)]
     self.heads = MultiLinear(Kq, cfg.dep_dim, cfg.card)
-    for m in self.modules():
-      if isinstance(m, nn.Linear): _trunc_normal(m.weight, m.in_features)
-      elif isinstance(m, nn.Embedding): _trunc_normal(m.weight, m.embedding_dim)
-    # small output heads so a randomly initialised model starts at loss ~ln(2048) instead of ~10
-    with torch.no_grad(): self.heads.weight.mul_(0.1)
+    self.heads.weight = self.heads.weight * 0.1   # small output heads: a random model starts at loss ~ln(2048) instead of ~10
 
-  # tokens [B, T, n_q], -1 = no input (masked stream): contributes a zero vector
-  def embed(self, tokens):
-    e = self.emb(tokens.clamp_min(0) + self.emb_offsets) * (tokens >= 0)[..., None].to(self.emb.weight.dtype)
-    return e.sum(2)
+  # tokens [..., K] with codebook k looked up in table rows k*C + token; -1 = no input (masked stream) contributes zero
+  @staticmethod
+  def _lookup(table, tokens):
+    off = mx.arange(tokens.shape[-1]) * (table.weight.shape[0] // tokens.shape[-1])
+    return table(mx.maximum(tokens, 0) + off) * (tokens >= 0)[..., None]
+
+  def embed(self, tokens): return self._lookup(self.emb, tokens).sum(-2)   # [B, T, n_q] -> [B, T, dim]
 
   def temporal(self, x):
-    cos, sin = rope_tables(x.shape[1], self.cfg.dim // self.cfg.num_heads, self.cfg.max_period, x.device)
-    for layer in self.layers: x = layer(x, cos, sin)
-    return self.out_norm(x)
+    for layer in self.layers: x = layer(x)
+    return norm(x, self.out_norm.weight)
 
   # h [N, dim]; prev [N, dep_q-1] true tokens of codebooks 0..6 (teacher forcing). Returns [Kq, N, dep_dim]
   def depformer(self, h, prev):
     x = self.dep_in.fan_out(h)
-    te = self.dep_emb(prev.clamp_min(0) + self.dep_offsets) * (prev >= 0)[..., None].to(self.dep_emb.weight.dtype)
-    x = x + F.pad(te.transpose(0, 1), (0, 0, 0, 0, 1, 0)).to(x.dtype)   # step 0 gets no token
+    te = self._lookup(self.dep_emb, prev).transpose(1, 0, 2).astype(x.dtype)
+    x = x + mx.pad(te, [(1, 0), (0, 0), (0, 0)])   # step 0 gets no token
     for layer in self.dep_layers: x = layer(x)
     return x
 
-  def head_ce(self, z, tgt): return F.cross_entropy(self.heads(z).float().flatten(0, 1), tgt.flatten(), reduction="none").view_as(tgt)
-
   # seq [B, T+1, n_q] delayed codes with seq[:, 0] = start token. Returns (loss, per-codebook loss)
-  def forward(self, seq):
+  def __call__(self, seq):
     c = self.cfg
     inp, tgt = seq[:, :-1], seq[:, 1:]
     B, T, _ = inp.shape
     h = self.temporal(self.embed(inp)).reshape(B * T, c.dim)
     tgt = tgt[..., :c.dep_q].reshape(B * T, c.dep_q)
     z = self.depformer(h, tgt[:, :-1])
-    tgt = tgt.t()                                   # [Kq, N]
+    tgt = tgt.T                                         # [Kq, N]
     # each codebook's loss is averaged over its own real targets (masked -1 and delay filler excluded), then the 8 are averaged equally
-    m = ((tgt >= 0) & (tgt < c.card)).float()
-    per_cb = (self.head_ce(z, tgt.clamp(0, c.card - 1)) * m).sum(1) / m.sum(1).clamp_min(1)
-    return per_cb.mean(), per_cb.detach()
+    m = (tgt >= 0) & (tgt < c.card)
+    ce = nn.losses.cross_entropy(self.heads(z).astype(mx.float32), mx.clip(tgt, 0, c.card - 1))
+    per_cb = (ce * m).sum(1) / mx.maximum(m.sum(1), 1)
+    return per_cb.mean(), per_cb
 
   # ── streaming inference ──
-  def init_state(self, B, Tmax=None, dtype=torch.bfloat16):
-    c, dev = self.cfg, self.emb.weight.device
-    Tmax, hd, dhd = Tmax or c.context, c.dim // c.num_heads, c.dep_dim // c.dep_heads
-    z = lambda *s: torch.zeros(*s, device=dev, dtype=dtype)
-    cos, sin = rope_tables(Tmax, hd, c.max_period, dev)
-    return {"kc": [z(B, c.num_heads, Tmax, hd) for _ in self.layers], "vc": [z(B, c.num_heads, Tmax, hd) for _ in self.layers],
-            "dkc": [z(B, c.dep_heads, c.dep_q, dhd) for _ in self.dep_layers], "dvc": [z(B, c.dep_heads, c.dep_q, dhd) for _ in self.dep_layers],
-            "pos": torch.zeros((), dtype=torch.long, device=dev), "cos": cos, "sin": sin, "ar": torch.arange(Tmax, device=dev)}
+  # temporal KV caches are preallocated for Tmax frames; the 8-codebook depth pass of a frame is one compiled graph
+  def init_state(self, B, Tmax, temp=1.1, top_k=50):
+    c, dt = self.cfg, self.out_norm.weight.dtype
+    z = lambda: mx.zeros((B, c.num_heads, Tmax, c.dim // c.num_heads), dt)
+    return {"kc": [z() for _ in self.layers], "vc": [z() for _ in self.layers], "pos": 0,
+            "dep": mx.compile(partial(self.dep_frame, temp=temp, top_k=top_k))}
 
-  # One 80 ms frame. inp [B, n_q] delayed tokens of the previous frame (card = start, -1 = none); forced [B, dep_q] (>= 0 forces
-  # that token, -2 samples). Returns the frame's delayed tokens [B, dep_q]. Static shapes only, so it can be captured in a CUDA graph.
-  @torch.no_grad()
-  def step(self, st, inp, forced, temp=1.1, top_k=50):
-    c, pos = self.cfg, st["pos"]
-    x = self.embed(inp[:, None]).to(torch.bfloat16)
-    cos, sin = st["cos"].index_select(0, pos.view(1)), st["sin"].index_select(0, pos.view(1))
-    mask = (st["ar"] <= pos)[None, None, None, :]
-    for i, layer in enumerate(self.layers): x = layer.step(x, cos, sin, st["kc"][i], st["vc"][i], pos, mask)
-    h, out, prev = self.out_norm(x)[:, 0], [], None
+  # h [B, dim] -> the frame's delayed tokens [B, dep_q]; forced [B, dep_q] (>= 0 forces that token, -2 samples)
+  def dep_frame(self, h, forced, key, temp, top_k):
+    c, out, prev = self.cfg, [], None
+    keys, ks, vs = mx.random.split(key, c.dep_q), [[] for _ in self.dep_layers], [[] for _ in self.dep_layers]
     for k in range(c.dep_q):
       z = self.dep_in.one(h, k)
-      if prev is not None: z = z + self.dep_emb(prev + (k - 1) * (c.card + 1)).to(z.dtype)
-      for j, layer in enumerate(self.dep_layers): z = layer.step(z, k, st["dkc"][j], st["dvc"][j])
-      tok = sample_topk(self.heads.one(z, k).float(), temp, top_k)
-      prev = torch.where(forced[:, k] >= 0, forced[:, k], tok)
+      if prev is not None: z = z + self.dep_emb(prev + (k - 1) * (c.card + 1)).astype(z.dtype)
+      for j, layer in enumerate(self.dep_layers): z = layer.step(z, k, ks[j], vs[j])
+      tok = sample_topk(self.heads.one(z, k).astype(mx.float32), temp, top_k, keys[k])
+      prev = mx.where(forced[:, k] >= 0, forced[:, k], tok)
       out.append(prev)
-    pos.add_(1)
-    return torch.stack(out, 1)
+    return mx.stack(out, 1)
+
+  # One 80 ms frame. inp [B, n_q] delayed tokens of the previous frame (card = start, -1 = none). Lazy: nothing is evaluated here.
+  def step(self, st, inp, forced, key):
+    x, pos = self.embed(inp[:, None]).astype(BF16), st["pos"]
+    for i, layer in enumerate(self.layers): x = layer.step(x, st["kc"][i], st["vc"][i], pos)
+    st["pos"] = pos + 1
+    return st["dep"](norm(x, self.out_norm.weight)[:, 0], forced, key)
 
 
-# keep the top_k logits, divide by temp, sample. Gumbel-max via an exponential race: argmax(p / Exp(1)) is a draw from p,
-# with no data-dependent shapes or host syncs, so it runs inside a CUDA graph. temp <= 0 is greedy.
-def sample_topk(logits, temp, top_k):
-  if temp <= 0: return logits.argmax(-1)
-  v, i = logits.topk(top_k, dim=-1)
-  p = torch.softmax(v / temp, dim=-1)
-  return i.gather(-1, (p / torch.empty_like(p).exponential_()).argmax(-1, keepdim=True))[:, 0]
+# keep the top_k logits, divide by temp, sample; temp <= 0 is greedy
+def sample_topk(logits, temp, top_k, key):
+  if temp <= 0: return logits.argmax(-1).astype(mx.int32)
+  idx = mx.argpartition(-logits, top_k - 1, axis=-1)[..., :top_k]
+  pick = mx.random.categorical(mx.take_along_axis(logits, idx, -1) / temp, key=key)
+  return mx.take_along_axis(idx, pick[..., None], -1)[..., 0].astype(mx.int32)
 
 
-# ── weights: a folder with config.json and model.safetensors (or model.safetensors.partNNN pieces, joined on first load) ──
-def load(path, device="cuda", dtype=torch.bfloat16):
-  cfg, f = Config.from_dict(json.load(open(os.path.join(path, "config.json")))), os.path.join(path, "model.safetensors")
-  if not os.path.exists(f):
-    parts = sorted(glob.glob(f + ".part*"), key=lambda p: int(re.sub(r"\D", "", p.rsplit(".part", 1)[1]) or 0))
-    assert parts, f"no model.safetensors or model.safetensors.part* in {path}"
-    with open(f + ".tmp", "wb") as o:
-      for p in parts:
-        with open(p, "rb") as i: shutil.copyfileobj(i, o, 1 << 24)
-    sums = os.path.join(path, "SHA256SUMS")
-    want = dict(l.split()[::-1] for l in open(sums) if l.strip()).get("model.safetensors") if os.path.exists(sums) else None
-    if want: assert hashlib.file_digest(open(f + ".tmp", "rb"), "sha256").hexdigest() == want, "joined model.safetensors fails SHA256SUMS"
-    os.replace(f + ".tmp", f)
+# ── weights: a folder with config.json and model.safetensors (same names and layout as the original PyTorch release) ──
+def load(path, dtype=BF16, bits=0):
+  cfg = Config.from_dict(json.load(open(os.path.join(path, "config.json"))))
   m = Caramel(cfg)
-  m.load_state_dict(load_file(f), strict=True)
-  return m.to(device, dtype).eval()
-
-# training checkpoint (.pt from train.py: {"model", "cfg", ...}) -> config.json + model.safetensors (bf16, as generation runs)
-def convert(ckpt, out, dtype=torch.bfloat16):
-  ck = torch.load(ckpt, map_location="cpu", weights_only=False)
-  cfg = Config.from_dict(ck["cfg"])
-  Caramel(cfg).load_state_dict(ck["model"], strict=True)   # fails loudly if the checkpoint is not this architecture
-  os.makedirs(out, exist_ok=True)
-  json.dump(asdict(cfg), open(os.path.join(out, "config.json"), "w"), indent=1)
-  save_file({k: v.to(dtype).contiguous() for k, v in ck["model"].items()}, os.path.join(out, "model.safetensors"))
+  m.load_weights(os.path.join(path, "model.safetensors"), strict=True)
+  m.set_dtype(dtype)
+  # weight-only quantization of every matmul except the embedding tables; generation reads all weights every frame
+  if bits: nn.quantize(m, group_size=32, bits=bits, class_predicate=lambda p, mod: isinstance(mod, (Linear, MultiLinear)) and mod.weight.shape[1] % 32 == 0)
+  mx.eval(m.parameters())
+  m.eval()
+  return m
 
 
-if __name__ == "__main__": convert(sys.argv[1], sys.argv[2])   # python model.py runs/s3/best.pt ./caramel-1
+def save(model, path, dtype=BF16):
+  os.makedirs(path, exist_ok=True)
+  json.dump(asdict(model.cfg), open(os.path.join(path, "config.json"), "w"), indent=1)
+  mx.save_safetensors(os.path.join(path, "model.safetensors"), {k: v.astype(dtype) for k, v in nn.utils.tree_flatten(model.parameters())})
+
+
+# a release of the original PyTorch model ships model.safetensors as .partNNN pieces: join them once
+def join_parts(path):
+  import glob, hashlib, re, shutil
+  f = os.path.join(path, "model.safetensors")
+  if os.path.exists(f): return
+  parts = sorted(glob.glob(f + ".part*"), key=lambda p: int(re.sub(r"\D", "", p.rsplit(".part", 1)[1]) or 0))
+  assert parts, f"no model.safetensors or model.safetensors.part* in {path}"
+  with open(f + ".tmp", "wb") as o:
+    for p in parts:
+      with open(p, "rb") as i: shutil.copyfileobj(i, o, 1 << 24)
+  sums = os.path.join(path, "SHA256SUMS")
+  want = dict(l.split()[::-1] for l in open(sums) if l.strip()).get("model.safetensors") if os.path.exists(sums) else None
+  if want: assert hashlib.file_digest(open(f + ".tmp", "rb"), "sha256").hexdigest() == want, "joined model.safetensors fails SHA256SUMS"
+  os.replace(f + ".tmp", f)
+
+
+if __name__ == "__main__": join_parts(sys.argv[1])   # python model.py ./caramel-1
