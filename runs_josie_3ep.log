@@ -4,3 +4,4 @@ step 1 loss 2.4888 cb0 2.198 lr 3.00e-06 dt 3497ms frames/s 1573
 step 11 loss 1.3147 cb0 1.241 lr 3.00e-05 dt 2664ms frames/s 1783
 step 21 loss 1.5327 cb0 1.347 lr 2.92e-05 dt 2876ms frames/s 2086
 EVAL step 25 dev_loss 1.5223
+step 31 loss 1.8462 cb0 1.691 lr 2.68e-05 dt 15538ms frames/s 322

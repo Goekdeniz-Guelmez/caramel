@@ -100,6 +100,14 @@ def load_ckpt(path, model, opt):
 def main(a):
   group = mx.distributed.init()   # multi-Mac data parallel when started with mlx.launch, a no-op group of 1 otherwise
   rank, world = group.rank(), group.size()
+  if a.epochs:   # passes over the training data -> steps (with --weights the stores are seen in proportion, not exactly N times)
+    frames = 0
+    for d in a.data:
+      f = json.load(open(os.path.join(d, "meta.json")))["frames"]
+      frames += min(f, int(a.train_hours * 3600 * 12.5)) if a.train_hours else f
+    a.steps = math.ceil(a.epochs * frames / (a.fpb * a.accum * world))
+    if rank == 0: print(f"--epochs {a.epochs:g}: {frames} frames / {a.fpb * a.accum * world} per step -> {a.steps} steps", flush=True)
+  elif not a.steps: raise SystemExit("give --steps or --epochs")
   mx.random.seed(a.seed)
   os.makedirs(a.out, exist_ok=True)
   cfg = Config.from_dict(json.load(open(os.path.join(a.init, "config.json")))) if a.init else Config(**json.loads(a.cfg))
@@ -188,7 +196,8 @@ if __name__ == "__main__":
   ap.add_argument("--weights", type=float, nargs="*", default=None, help="sampling weight per store (default: by frames)")
   ap.add_argument("--train_hours", type=float, default=0, help="use only the first N hours of each --data store (0 = all); --dev is never cut")
   ap.add_argument("--out", required=True)
-  ap.add_argument("--steps", type=int, required=True, help="end of the LR schedule")
+  ap.add_argument("--steps", type=int, default=0, help="end of the LR schedule")
+  ap.add_argument("--epochs", type=float, default=0, help="set --steps from passes over --data (overrides --steps)")
   ap.add_argument("--stop_at", type=int, default=0, help="stop (and save ckpt/) here; the schedule still spans --steps")
   ap.add_argument("--resume", default="", help="ckpt/ folder of the previous stage")
   ap.add_argument("--init", default="", help="model folder to fine-tune (config.json + model.safetensors); --cfg is ignored")
