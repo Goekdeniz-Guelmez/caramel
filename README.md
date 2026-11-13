@@ -185,6 +185,13 @@ python train.py --data data/stereo data/mono --weights 0.8 0.2 --steps 47000 \
 python generate.py --model runs/s3/best    # best/ is already a model folder: config.json + model.safetensors (bf16)
 ```
 
+## synthetic conversations
+`synthetic/` generates two-speaker conversations with a text teacher (Ollama or a local MLX model) and two TTS voices
+(Phonon or Qwen3-TTS cloning), including barge-ins, "wait a minute" / "listen until I'm done" holds and backchannels.
+Only the two aligned audio tracks reach caramel. Run [notebooks/synthetic_data.ipynb](notebooks/synthetic_data.ipynb)
+(extra installs: `uv pip install openai datasets ptts mlx-vlm tqdm`); its last cells write `prepare.py --manifest`
+files and tokenize them into `data/synthetic_tokens_{train,validation}` for `train.py --data ... --dev ...`.
+
 ## license
 
 Apache 2.0.

@@ -1,7 +1,14 @@
+# environments and caches
 .venv/
+.uv-cache/
 __pycache__/
+.ipynb_checkpoints/
+.DS_Store
+
+# weights, data and training output
 weights/
 caramel-1/
 runs/
-*.wav
 data/
+*.log
+*.wav
