@@ -112,7 +112,10 @@ class DepBlock(nn.Module):
   def __call__(self, x):
     K, N, d = x.shape
     q, k, v = self.in_proj(norm(x, self.norm1.weight)).reshape(K, N, 3, self.h, self.hd).transpose(2, 1, 3, 0, 4)   # [N, H, Kq, hd]
-    o = mx.fast.scaled_dot_product_attention(q, k, v, scale=self.hd ** -0.5, mask="causal")
+    # explicit attention: with Kq=8 MLX's fused SDPA picks its vector kernel, which has no VJP (training fails)
+    s = (q * self.hd ** -0.5) @ k.swapaxes(-1, -2)
+    s = mx.where(mx.tril(mx.ones((K, K), dtype=mx.bool_)), s, mx.array(-mx.inf, s.dtype))
+    o = mx.softmax(s.astype(mx.float32), axis=-1).astype(v.dtype) @ v
     x = x + self.out_proj(o.transpose(2, 0, 1, 3).reshape(K, N, d))
     return x + self.lin_out(swiglu(self.lin_in(norm(x, self.norm2.weight))))
 
