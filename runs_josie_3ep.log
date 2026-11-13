@@ -1,7 +1,0 @@
-params 413.2M  world 1  cfg {"card": 2048, "n_q": 16, "dep_q": 8, "context": 3000, "max_period": 10000.0, "dim": 1024, "num_layers": 16, "num_heads": 16, "hidden_scale": 4.125, "dep_dim": 512, "dep_layers": 6, "dep_heads": 8, "dep_hidden_scale": 4.125, "delays": [0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1]}
-EVAL step 0 dev_loss 1.6526
-step 1 loss 2.4888 cb0 2.198 lr 3.00e-06 dt 3497ms frames/s 1573
-step 11 loss 1.3147 cb0 1.241 lr 3.00e-05 dt 2664ms frames/s 1783
-step 21 loss 1.5327 cb0 1.347 lr 2.92e-05 dt 2876ms frames/s 2086
-EVAL step 25 dev_loss 1.5223
-step 31 loss 1.8462 cb0 1.691 lr 2.68e-05 dt 15538ms frames/s 322
