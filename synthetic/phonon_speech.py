@@ -1,7 +1,7 @@
 """Gradium Phonon TTS (on-device, `pip install ptts`) as a synthetic speech provider.
 
-Phonon gives no word timestamps, so words are measured with the same local
-Qwen3 forced aligner (and the same caching / validation) as `Qwen3ClonedSpeech`.
+Phonon gives no word timestamps, so words are measured with a local forced
+aligner (`synthetic.aligner.AlignedSpeech`, which also handles the disk cache).
 
 Each role's voice is one of
 * a catalog or checkpoint voice name ("Zoey", "Freya", ... - `python -m ptts --list-voices`),
@@ -28,7 +28,7 @@ from typing import Any
 
 import numpy as np
 
-from synthetic.qwen_speech import DEFAULT_QWEN_ALIGNER_MODEL, Qwen3ClonedSpeech
+from synthetic.aligner import DEFAULT_ALIGNER_MODEL, AlignedSpeech
 
 DEFAULT_PHONON_MODEL = "hf://gradium/phonon-40m-multilingual"
 
@@ -97,13 +97,13 @@ class PhononVoice:
         return {kind: hashlib.sha256(path.read_bytes()).hexdigest()}
 
 
-class PhononSpeech(Qwen3ClonedSpeech):
-    """Phonon synthesis + Qwen3 forced alignment, cached on disk."""
+class PhononSpeech(AlignedSpeech):
+    """Phonon synthesis + forced word alignment, cached on disk."""
 
     def __init__(self, cache_dir: str | Path, *, user_voice: PhononVoice | Sequence[PhononVoice],
                  assistant_voice: PhononVoice,
                  model: str = DEFAULT_PHONON_MODEL, language: str = "en", temperature: float | None = None,
-                 alignment_model: str = DEFAULT_QWEN_ALIGNER_MODEL, alignment_language: str = "English",
+                 alignment_model: str = DEFAULT_ALIGNER_MODEL, alignment_language: str = "English",
                  min_alignment_match: float = 0.9, loaded_aligner_model: Any = None):
         self.cache_dir = Path(cache_dir)
         self.cache_dir.mkdir(parents=True, exist_ok=True)

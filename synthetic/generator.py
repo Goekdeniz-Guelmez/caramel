@@ -662,7 +662,7 @@ class SyntheticConversationGenerator:
 
     def generate(
         self, dataset: Any, *, max_samples: int | None = None,
-        retry_failed: bool = False,
+        retry_failed: bool = False, start: int = 0,
     ) -> list[dict[str, Any]]:
         from tqdm.auto import tqdm
 
@@ -717,10 +717,10 @@ class SyntheticConversationGenerator:
             if record["fingerprint"] != self.fingerprint:
                 raise ValueError("stored episode belongs to a different generation run")
             indexed_records[record["row_index"]] = record
-        completed = sum(index < total for index in indexed_records)
+        completed = sum(start <= index < total for index in indexed_records)
         tqdm.write(f"Resuming {self.output}: {completed} saved episodes reused.")
-        with tqdm(total=total, desc="Synthetic conversations", unit="episode") as bar:
-            for index in range(total):
+        with tqdm(total=total - start, desc="Synthetic conversations", unit="episode") as bar:
+            for index in range(start, total):
 
                 def progress(turn, turns, phase, episode_index=index):
                     bar.set_postfix(

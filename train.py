@@ -20,8 +20,55 @@ class TokenStore:
     self.tok = np.memmap(os.path.join(d, "tokens.bin"), dtype=np.uint16, mode="r", shape=(meta["frames"], self.W))
     self.cum = np.cumsum(self.index[:, 1])   # clips are drawn proportionally to their length
 
+  @classmethod
+  def from_clips(cls, clips):   # in-memory store from [frames, W] arrays (e.g. a streamed dev split)
+    s = cls.__new__(cls)
+    s.W, s.tok = clips[0].shape[1], np.concatenate(clips)
+    lens = np.array([len(c) for c in clips], np.int64)
+    s.index = np.stack([np.cumsum(lens) - lens, lens], 1); s.cum = np.cumsum(lens)
+    return s
+
+  @property
+  def frames(self): return self.cum[-1]
   def clip(self, rng): return int(np.searchsorted(self.cum, rng.random() * self.cum[-1], side="right"))
   def window(self, i, start, L): return self.tok[self.index[i, 0] + start:self.index[i, 0] + start + L]
+  def sample(self, rng, L):
+    i = self.clip(rng)
+    return np.asarray(self.window(i, int(rng.integers(0, max(1, self.index[i, 1] - L + 1))), L))
+
+
+# hf://<repo>: a dataset repo written by synthetic/hub.py (parquet rows: id, width, frames, tokens = uint16 bytes), streamed
+# so nothing is stored on disk. A pool of clips stands in for the random access of a TokenStore: a window is drawn from a
+# random pool clip, and a clip is replaced by the next streamed one after ~frames/1250 windows (length-proportional sampling).
+def hub_meta(path):
+  from huggingface_hub import hf_hub_download
+  return json.load(open(hf_hub_download(path[5:], "meta.json", repo_type="dataset")))
+
+
+def hub_clips(path, split, seed=0, rank=0, world=1, shuffle=True):
+  from datasets import load_dataset
+  from datasets.distributed import split_dataset_by_node
+  ds = split_dataset_by_node(load_dataset(path[5:], split=split, streaming=True), rank, world)
+  if shuffle: ds = ds.shuffle(seed=seed, buffer_size=256)
+  for epoch in range(10**9 if shuffle else 1):
+    ds.set_epoch(epoch)
+    for r in ds: yield np.frombuffer(r["tokens"], np.uint16).reshape(r["frames"], r["width"])
+
+
+class StreamStore:
+  def __init__(self, path, seed, rank, world, pool=64):
+    self.frames, self.it = hub_meta(path)["frames"]["train"], hub_clips(path, "train", seed, rank, world)
+    self.pool = [self._next() for _ in range(pool)]
+
+  def _next(self):
+    c = next(self.it); return [c, math.ceil(len(c) / 1250)]
+
+  def sample(self, rng, L):
+    k = int(rng.integers(len(self.pool)))
+    c, self.pool[k][1] = self.pool[k][0], self.pool[k][1] - 1
+    if self.pool[k][1] <= 0: self.pool[k] = self._next()
+    start = int(rng.integers(0, max(1, len(c) - L + 1)))
+    return c[start:start + L]
 
 
 # raw [L, W] -> seq [L+1, 16] int16, ready for Caramel.__call__: start token first, then each codebook shifted by its delay
@@ -43,9 +90,10 @@ def delay_window(raw, L, swap):
 # Each batch draws one window length L from BUCKETS and holds frames_per_batch // L windows, so the compiled graphs only ever
 # see 4 shapes. Stores are picked by weight, clips by length, and the window start uniformly. One background thread keeps
 # a few batches ready; a single producer keeps the stream deterministic, so a resumed run sees the same data.
-def batch_stream(dirs, fpb, weights, seed, rank, hours=0.0):
-  rng, stores = np.random.default_rng([seed, rank]), [TokenStore(d, hours) for d in dirs]
-  sw = np.asarray(weights or [s.cum[-1] for s in stores], dtype=np.float64)
+def batch_stream(dirs, fpb, weights, seed, rank, hours=0.0, world=1):
+  rng = np.random.default_rng([seed, rank])
+  stores = [StreamStore(d, seed, rank, world) if d.startswith("hf://") else TokenStore(d, hours) for d in dirs]
+  sw = np.asarray(weights or [s.frames for s in stores], dtype=np.float64)
   sw /= sw.sum()
   q = queue.Queue(maxsize=8)
 
@@ -53,10 +101,7 @@ def batch_stream(dirs, fpb, weights, seed, rank, hours=0.0):
     while True:
       L, seqs = int(rng.choice(BUCKETS)), []
       for _ in range(max(1, fpb // L)):
-        s = stores[rng.choice(len(stores), p=sw)]
-        i = s.clip(rng)
-        start = int(rng.integers(0, max(1, s.index[i, 1] - L + 1)))
-        seqs.append(delay_window(np.asarray(s.window(i, start, L)), L, bool(rng.integers(2))))
+        seqs.append(delay_window(stores[rng.choice(len(stores), p=sw)].sample(rng, L), L, bool(rng.integers(2))))
       q.put(np.stack(seqs))
 
   threading.Thread(target=produce, daemon=True).start()
@@ -65,10 +110,10 @@ def batch_stream(dirs, fpb, weights, seed, rank, hours=0.0):
 
 # fixed held-out windows (fixed seed), each scored in both speaker orders; same shape as a training bucket so graphs are reused
 def eval_batches(d, n=64, L=1500, bs=16, seed=12345):
-  s, rng, seqs = TokenStore(d), np.random.default_rng(seed), []
+  s = TokenStore.from_clips(list(hub_clips(d, "validation", shuffle=False))) if d.startswith("hf://") else TokenStore(d)
+  rng, seqs = np.random.default_rng(seed), []
   for _ in range(n):
-    i = s.clip(rng)
-    raw = np.asarray(s.window(i, int(rng.integers(0, max(1, s.index[i, 1] - L + 1))), L))
+    raw = s.sample(rng, L)
     seqs += [delay_window(raw, L, False), delay_window(raw, L, True)]
   return [np.stack(seqs[k:k + bs]) for k in range(0, len(seqs), bs)]
 
@@ -103,7 +148,7 @@ def main(a):
   if a.epochs:   # passes over the training data -> steps (with --weights the stores are seen in proportion, not exactly N times)
     frames = 0
     for d in a.data:
-      f = json.load(open(os.path.join(d, "meta.json")))["frames"]
+      f = hub_meta(d)["frames"]["train"] if d.startswith("hf://") else json.load(open(os.path.join(d, "meta.json")))["frames"]
       frames += min(f, int(a.train_hours * 3600 * 12.5)) if a.train_hours else f
     a.steps = math.ceil(a.epochs * frames / (a.fpb * a.accum * world))
     if rank == 0: print(f"--epochs {a.epochs:g}: {frames} frames / {a.fpb * a.accum * world} per step -> {a.steps} steps", flush=True)
@@ -139,7 +184,7 @@ def main(a):
 
   evaluate = mx.compile(model.__call__, inputs=model.state)
 
-  data = batch_stream(a.data, a.fpb, a.weights, a.seed + 7919 * start, rank, a.train_hours)
+  data = batch_stream(a.data, a.fpb, a.weights, a.seed + 7919 * start, rank, a.train_hours, world)
   end = a.stop_at or a.steps
   eval_at = (set(range(0, a.steps + 1, a.eval_every)) if a.eval_every else set()) | ({a.stop_at} if a.stop_at else set())
   dev_batches = eval_batches(a.dev, bs=max(1, a.fpb // 1500)) if a.dev else []
@@ -192,7 +237,7 @@ def main(a):
 
 if __name__ == "__main__":
   ap = argparse.ArgumentParser()
-  ap.add_argument("--data", nargs="+", required=True, help="token store folders")
+  ap.add_argument("--data", nargs="+", required=True, help="token store folders, or hf://<user>/<dataset> to stream a repo written by synthetic/hub.py")
   ap.add_argument("--weights", type=float, nargs="*", default=None, help="sampling weight per store (default: by frames)")
   ap.add_argument("--train_hours", type=float, default=0, help="use only the first N hours of each --data store (0 = all); --dev is never cut")
   ap.add_argument("--out", required=True)
@@ -207,7 +252,7 @@ if __name__ == "__main__":
   ap.add_argument("--lr", type=float, default=3e-4); ap.add_argument("--warmup", type=int, default=50)
   ap.add_argument("--wd", type=float, default=0.1); ap.add_argument("--clip", type=float, default=1.0)
   ap.add_argument("--seed", type=int, default=0)
-  ap.add_argument("--dev", default="", help="held-out store for dev loss")
+  ap.add_argument("--dev", default="", help="held-out store for dev loss (hf://<user>/<dataset> uses its validation split)")
   ap.add_argument("--eval_every", type=int, default=0); ap.add_argument("--patience", type=int, default=0); ap.add_argument("--save_best", action="store_true")
   ap.add_argument("--cfg", default="{}", help="json overrides for Config")
   main(ap.parse_args())
