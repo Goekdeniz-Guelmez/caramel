@@ -1,0 +1,551 @@
+{
+ "type": "excalidraw",
+ "version": 2,
+ "source": "caramel-paper",
+ "elements": [
+  {
+   "type": "text",
+   "id": "t1",
+   "x": 20,
+   "y": 10,
+   "width": 740.0,
+   "height": 25.0,
+   "text": "Streaming inference: one 80 ms step with KV caches (live.py / generate.py)",
+   "originalText": "Streaming inference: one 80 ms step with KV caches (live.py / generate.py)",
+   "fontSize": 20,
+   "fontFamily": 1,
+   "strokeColor": "#1e1e1e",
+   "autoResize": true
+  },
+  {
+   "type": "rectangle",
+   "id": "s2",
+   "x": 20,
+   "y": 60,
+   "width": 200,
+   "height": 70,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#ffd8a8",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "opacity": 100,
+   "strokeStyle": "solid",
+   "roundness": {
+    "type": 3
+   },
+   "boundElements": [
+    {
+     "id": "t3",
+     "type": "text"
+    }
+   ]
+  },
+  {
+   "type": "text",
+   "id": "t3",
+   "x": 25,
+   "y": 65,
+   "width": 190,
+   "height": 60,
+   "text": "mic block\n1920 samples",
+   "originalText": "mic block\n1920 samples",
+   "fontSize": 15,
+   "fontFamily": 1,
+   "strokeColor": "#1e1e1e",
+   "textAlign": "center",
+   "verticalAlign": "middle",
+   "containerId": "s2",
+   "autoResize": true
+  },
+  {
+   "type": "rectangle",
+   "id": "s4",
+   "x": 260,
+   "y": 60,
+   "width": 200,
+   "height": 70,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#c3fae8",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "opacity": 100,
+   "strokeStyle": "solid",
+   "roundness": {
+    "type": 3
+   },
+   "boundElements": [
+    {
+     "id": "t5",
+     "type": "text"
+    }
+   ]
+  },
+  {
+   "type": "text",
+   "id": "t5",
+   "x": 265,
+   "y": 65,
+   "width": 190,
+   "height": 60,
+   "text": "Mimi encode_step\n-> 8 codes (user)",
+   "originalText": "Mimi encode_step\n-> 8 codes (user)",
+   "fontSize": 15,
+   "fontFamily": 1,
+   "strokeColor": "#1e1e1e",
+   "textAlign": "center",
+   "verticalAlign": "middle",
+   "containerId": "s4",
+   "autoResize": true
+  },
+  {
+   "type": "rectangle",
+   "id": "s6",
+   "x": 500,
+   "y": 60,
+   "width": 230,
+   "height": 70,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#fff3bf",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "opacity": 100,
+   "strokeStyle": "solid",
+   "roundness": {
+    "type": 3
+   },
+   "boundElements": [
+    {
+     "id": "t7",
+     "type": "text"
+    }
+   ]
+  },
+  {
+   "type": "text",
+   "id": "t7",
+   "x": 505,
+   "y": 65,
+   "width": 220,
+   "height": 60,
+   "text": "input [me | other]\n16 delayed tokens",
+   "originalText": "input [me | other]\n16 delayed tokens",
+   "fontSize": 15,
+   "fontFamily": 1,
+   "strokeColor": "#1e1e1e",
+   "textAlign": "center",
+   "verticalAlign": "middle",
+   "containerId": "s6",
+   "autoResize": true
+  },
+  {
+   "type": "rectangle",
+   "id": "s8",
+   "x": 770,
+   "y": 60,
+   "width": 280,
+   "height": 70,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#a5d8ff",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "opacity": 100,
+   "strokeStyle": "solid",
+   "roundness": {
+    "type": 3
+   },
+   "boundElements": [
+    {
+     "id": "t9",
+     "type": "text"
+    }
+   ]
+  },
+  {
+   "type": "text",
+   "id": "t9",
+   "x": 775,
+   "y": 65,
+   "width": 270,
+   "height": 60,
+   "text": "temporal step at pos\nwrite K,V into cache[pos]",
+   "originalText": "temporal step at pos\nwrite K,V into cache[pos]",
+   "fontSize": 15,
+   "fontFamily": 1,
+   "strokeColor": "#1e1e1e",
+   "textAlign": "center",
+   "verticalAlign": "middle",
+   "containerId": "s8",
+   "autoResize": true
+  },
+  {
+   "type": "arrow",
+   "id": "a10",
+   "x": 220,
+   "y": 95,
+   "width": 40,
+   "height": 0,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     40,
+     0
+    ]
+   ],
+   "endArrowhead": "arrow",
+   "startArrowhead": null,
+   "strokeColor": "#1e1e1e",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "strokeStyle": "solid"
+  },
+  {
+   "type": "arrow",
+   "id": "a11",
+   "x": 460,
+   "y": 95,
+   "width": 40,
+   "height": 0,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     40,
+     0
+    ]
+   ],
+   "endArrowhead": "arrow",
+   "startArrowhead": null,
+   "strokeColor": "#1e1e1e",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "strokeStyle": "solid"
+  },
+  {
+   "type": "arrow",
+   "id": "a12",
+   "x": 730,
+   "y": 95,
+   "width": 40,
+   "height": 0,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     40,
+     0
+    ]
+   ],
+   "endArrowhead": "arrow",
+   "startArrowhead": null,
+   "strokeColor": "#1e1e1e",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "strokeStyle": "solid"
+  },
+  {
+   "type": "rectangle",
+   "id": "s13",
+   "x": 770,
+   "y": 180,
+   "width": 280,
+   "height": 70,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#d0bfff",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "opacity": 100,
+   "strokeStyle": "solid",
+   "roundness": {
+    "type": 3
+   },
+   "boundElements": [
+    {
+     "id": "t14",
+     "type": "text"
+    }
+   ]
+  },
+  {
+   "type": "text",
+   "id": "t14",
+   "x": 775,
+   "y": 185,
+   "width": 270,
+   "height": 60,
+   "text": "compiled depth pass\n8 codebooks x 6 layers\n+ top-k sampling",
+   "originalText": "compiled depth pass\n8 codebooks x 6 layers\n+ top-k sampling",
+   "fontSize": 14,
+   "fontFamily": 1,
+   "strokeColor": "#1e1e1e",
+   "textAlign": "center",
+   "verticalAlign": "middle",
+   "containerId": "s13",
+   "autoResize": true
+  },
+  {
+   "type": "arrow",
+   "id": "a15",
+   "x": 910,
+   "y": 130,
+   "width": 0,
+   "height": 50,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     50
+    ]
+   ],
+   "endArrowhead": "arrow",
+   "startArrowhead": null,
+   "strokeColor": "#1e1e1e",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "strokeStyle": "solid"
+  },
+  {
+   "type": "rectangle",
+   "id": "s16",
+   "x": 500,
+   "y": 180,
+   "width": 230,
+   "height": 70,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#c3fae8",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "opacity": 100,
+   "strokeStyle": "solid",
+   "roundness": {
+    "type": 3
+   },
+   "boundElements": [
+    {
+     "id": "t17",
+     "type": "text"
+    }
+   ]
+  },
+  {
+   "type": "text",
+   "id": "t17",
+   "x": 505,
+   "y": 185,
+   "width": 220,
+   "height": 60,
+   "text": "Mimi decode_step\nframe t-1 -> 1920 samples",
+   "originalText": "Mimi decode_step\nframe t-1 -> 1920 samples",
+   "fontSize": 14,
+   "fontFamily": 1,
+   "strokeColor": "#1e1e1e",
+   "textAlign": "center",
+   "verticalAlign": "middle",
+   "containerId": "s16",
+   "autoResize": true
+  },
+  {
+   "type": "arrow",
+   "id": "a18",
+   "x": 770,
+   "y": 215,
+   "width": 40,
+   "height": 0,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     -40,
+     0
+    ]
+   ],
+   "endArrowhead": "arrow",
+   "startArrowhead": null,
+   "strokeColor": "#1e1e1e",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "strokeStyle": "solid"
+  },
+  {
+   "type": "rectangle",
+   "id": "s19",
+   "x": 260,
+   "y": 180,
+   "width": 200,
+   "height": 70,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#b2f2bb",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "opacity": 100,
+   "strokeStyle": "solid",
+   "roundness": {
+    "type": 3
+   },
+   "boundElements": [
+    {
+     "id": "t20",
+     "type": "text"
+    }
+   ]
+  },
+  {
+   "type": "text",
+   "id": "t20",
+   "x": 265,
+   "y": 185,
+   "width": 190,
+   "height": 60,
+   "text": "speaker\n(80 ms later)",
+   "originalText": "speaker\n(80 ms later)",
+   "fontSize": 15,
+   "fontFamily": 1,
+   "strokeColor": "#1e1e1e",
+   "textAlign": "center",
+   "verticalAlign": "middle",
+   "containerId": "s19",
+   "autoResize": true
+  },
+  {
+   "type": "arrow",
+   "id": "a21",
+   "x": 500,
+   "y": 215,
+   "width": 40,
+   "height": 0,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     -40,
+     0
+    ]
+   ],
+   "endArrowhead": "arrow",
+   "startArrowhead": null,
+   "strokeColor": "#1e1e1e",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "strokeStyle": "solid"
+  },
+  {
+   "type": "arrow",
+   "id": "a22",
+   "x": 1050,
+   "y": 215,
+   "width": 570,
+   "height": 95,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     50,
+     0
+    ],
+    [
+     50,
+     85
+    ],
+    [
+     -570,
+     85
+    ],
+    [
+     -570,
+     -95
+    ],
+    [
+     -550,
+     -95
+    ]
+   ],
+   "endArrowhead": "arrow",
+   "startArrowhead": null,
+   "strokeColor": "#1e1e1e",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "strokeStyle": "dashed"
+  },
+  {
+   "type": "text",
+   "id": "t23",
+   "x": 569.5,
+   "y": 310.0,
+   "width": 441.0,
+   "height": 17.5,
+   "text": "sampled tokens become 'me' input of the next step (stay on GPU)",
+   "originalText": "sampled tokens become 'me' input of the next step (stay on GPU)",
+   "fontSize": 14,
+   "fontFamily": 1,
+   "strokeColor": "#1e1e1e",
+   "autoResize": true
+  },
+  {
+   "type": "rectangle",
+   "id": "s24",
+   "x": 20,
+   "y": 360,
+   "width": 1080,
+   "height": 90,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#e9ecef",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "opacity": 100,
+   "strokeStyle": "solid",
+   "roundness": {
+    "type": 3
+   },
+   "boundElements": [
+    {
+     "id": "t25",
+     "type": "text"
+    }
+   ]
+  },
+  {
+   "type": "text",
+   "id": "t25",
+   "x": 25,
+   "y": 365,
+   "width": 1070,
+   "height": 80,
+   "text": "KV cache: 16 layers x [B, 16 heads, Tmax, 64] preallocated, Tmax <= 3000 frames (240 s); attention reads 0..pos.\nBudget: < 80 ms per step. Stale mic blocks are dropped rather than drifting. mx.async_eval overlaps frame t+1 with t.\nWeight-only 8-bit / 4-bit quantisation for bandwidth-bound decoding.",
+   "originalText": "KV cache: 16 layers x [B, 16 heads, Tmax, 64] preallocated, Tmax <= 3000 frames (240 s); attention reads 0..pos.\nBudget: < 80 ms per step. Stale mic blocks are dropped rather than drifting. mx.async_eval overlaps frame t+1 with t.\nWeight-only 8-bit / 4-bit quantisation for bandwidth-bound decoding.",
+   "fontSize": 14,
+   "fontFamily": 1,
+   "strokeColor": "#1e1e1e",
+   "textAlign": "center",
+   "verticalAlign": "middle",
+   "containerId": "s24",
+   "autoResize": true
+  }
+ ],
+ "appState": {
+  "viewBackgroundColor": "#ffffff"
+ },
+ "files": {}
+}

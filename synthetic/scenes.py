@@ -118,7 +118,7 @@ class SceneBuilder:
     def say(self, role: str, text: str, start: int, history: bool = True):
         from synthetic.generator import Utterance
 
-        speech = self.gen.speech.synthesize(text, role)
+        speech = self.gen._synthesize(text, role)   # splits text over the TTS character limit
         self.gen._validate_speech(speech)
         utt = Utterance(role, self.turn, start, speech, speech)
         self.turn += 1

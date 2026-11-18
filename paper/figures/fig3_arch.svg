@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1300" height="508" viewBox="0 0 1300 508" font-family="Helvetica, Arial, sans-serif"><rect width="100%" height="100%" fill="#ffffff"/><text x="20.0" y="27.0" font-size="20" text-anchor="start" font-weight="bold" fill="#1e1e1e">Two-level factorisation: time (temporal transformer) x depth (depformer)</text>
+<rect x="40" y="400" width="130" height="50" rx="8" fill="#fff3bf" stroke="none"/>
+<path d="M 40.9,401.1 L 170.0,399.6 L 171.1,449.8 L 40.5,450.3 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="105.0" y="421.4" font-size="14" text-anchor="middle" fill="#1e1e1e">embed sum</text>
+<text x="105.0" y="438.4" font-size="14" text-anchor="middle" fill="#1e1e1e">16 tokens, t=0</text>
+<path d="M 105,400 L 105,360" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 109.5,370.0 L 105,360 L 100.5,370.0" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<rect x="190" y="400" width="130" height="50" rx="8" fill="#fff3bf" stroke="none"/>
+<path d="M 189.6,401.0 L 320.9,400.2 L 319.1,450.0 L 188.9,448.8 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="255.0" y="421.4" font-size="14" text-anchor="middle" fill="#1e1e1e">embed sum</text>
+<text x="255.0" y="438.4" font-size="14" text-anchor="middle" fill="#1e1e1e">16 tokens, t=1</text>
+<path d="M 255,400 L 255,360" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 259.5,370.0 L 255,360 L 250.5,370.0" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<rect x="340" y="400" width="130" height="50" rx="8" fill="#fff3bf" stroke="none"/>
+<path d="M 339.9,399.3 L 470.9,399.6 L 470.2,450.0 L 340.9,450.4 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="405.0" y="421.4" font-size="14" text-anchor="middle" fill="#1e1e1e">embed sum</text>
+<text x="405.0" y="438.4" font-size="14" text-anchor="middle" fill="#1e1e1e">16 tokens, t=2</text>
+<path d="M 405,400 L 405,360" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 409.5,370.0 L 405,360 L 400.5,370.0" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<rect x="490" y="400" width="130" height="50" rx="8" fill="#fff3bf" stroke="none"/>
+<path d="M 489.2,399.0 L 619.1,400.9 L 619.1,449.8 L 489.8,449.4 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="555.0" y="421.4" font-size="14" text-anchor="middle" fill="#1e1e1e">embed sum</text>
+<text x="555.0" y="438.4" font-size="14" text-anchor="middle" fill="#1e1e1e">16 tokens, t=3</text>
+<path d="M 555,400 L 555,360" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 559.5,370.0 L 555,360 L 550.5,370.0" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<rect x="30" y="230" width="610" height="130" rx="8" fill="#a5d8ff" stroke="none"/>
+<path d="M 30.4,230.8 L 639.8,229.4 L 641.2,360.9 L 30.3,359.9 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="335.0" y="281.1" font-size="16" text-anchor="middle" fill="#1e1e1e">temporal transformer (causal over frames)</text>
+<text x="335.0" y="300.6" font-size="16" text-anchor="middle" fill="#1e1e1e">16 layers, 16 heads, d = 1024, RoPE, SwiGLU, RMSNorm</text>
+<text x="335.0" y="320.1" font-size="16" text-anchor="middle" fill="#1e1e1e">context 3000 frames = 240 s</text>
+<path d="M 565,230 L 565,190 L 720,190" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 710.0,194.5 L 720,190 L 710.0,185.5" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="642.5" y="181.9" font-size="14" text-anchor="middle" fill="#1e1e1e">h_t</text>
+<text x="30.0" y="481.9" font-size="14" text-anchor="start" fill="#1e1e1e">flat embedding table: row = k(C)+token, C = 2049 (2048 + start)</text>
+<rect x="720" y="60" width="560" height="340" rx="8" fill="transparent" stroke="none"/>
+<path d="M 718.8,59.9 L 1279.9,60.9 L 1280.3,399.8 L 718.9,400.1 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round" stroke-dasharray="6 4"/>
+<text x="735.0" y="83.6" font-size="16" text-anchor="start" font-weight="bold" fill="#1e1e1e">depformer (one frame, causal over 8 codebooks)</text>
+<rect x="740" y="300" width="115" height="50" rx="8" fill="#d0bfff" stroke="none"/>
+<path d="M 740.8,300.4 L 854.6,300.2 L 855.9,348.9 L 739.2,349.2 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="797.5" y="329.6" font-size="13" text-anchor="middle" fill="#1e1e1e">in_proj_0(h_t)</text>
+<rect x="740" y="200" width="115" height="60" rx="8" fill="#d0bfff" stroke="none"/>
+<path d="M 739.9,200.7 L 856.1,199.7 L 856.2,259.0 L 739.7,259.8 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="797.5" y="226.4" font-size="14" text-anchor="middle" fill="#1e1e1e">6 layers</text>
+<text x="797.5" y="243.4" font-size="14" text-anchor="middle" fill="#1e1e1e">per-k weights</text>
+<rect x="740" y="110" width="115" height="50" rx="8" fill="#b2f2bb" stroke="none"/>
+<path d="M 740.8,110.7 L 855.1,111.0 L 854.2,160.9 L 739.7,159.2 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="797.5" y="139.9" font-size="14" text-anchor="middle" fill="#1e1e1e">head_k -&gt; c0</text>
+<path d="M 797,300 L 797,260" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 801.5,270.0 L 797,260 L 792.5,270.0" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 797,200 L 797,160" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 801.5,170.0 L 797,160 L 792.5,170.0" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 840,160 L 885,300" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-dasharray="7 5" stroke-linejoin="round"/>
+<path d="M 877.7,291.8 L 885,300 L 886.2,289.1" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<rect x="875" y="300" width="115" height="50" rx="8" fill="#d0bfff" stroke="none"/>
+<path d="M 874.8,299.4 L 989.7,300.1 L 990.0,349.2 L 873.9,349.0 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="932.5" y="321.6" font-size="13" text-anchor="middle" fill="#1e1e1e">in_proj_k(h_t)</text>
+<text x="932.5" y="337.5" font-size="13" text-anchor="middle" fill="#1e1e1e">+ emb(c0)</text>
+<rect x="875" y="200" width="115" height="60" rx="8" fill="#d0bfff" stroke="none"/>
+<path d="M 876.1,200.3 L 989.4,200.9 L 989.4,259.3 L 874.0,260.6 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="932.5" y="226.4" font-size="14" text-anchor="middle" fill="#1e1e1e">6 layers</text>
+<text x="932.5" y="243.4" font-size="14" text-anchor="middle" fill="#1e1e1e">per-k weights</text>
+<rect x="875" y="110" width="115" height="50" rx="8" fill="#b2f2bb" stroke="none"/>
+<path d="M 874.9,110.1 L 991.0,110.1 L 991.1,161.0 L 874.5,160.8 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="932.5" y="139.9" font-size="14" text-anchor="middle" fill="#1e1e1e">head_k -&gt; c1</text>
+<path d="M 932,300 L 932,260" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 936.5,270.0 L 932,260 L 927.5,270.0" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 932,200 L 932,160" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 936.5,170.0 L 932,160 L 927.5,170.0" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 975,160 L 1020,300" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-dasharray="7 5" stroke-linejoin="round"/>
+<path d="M 1012.7,291.8 L 1020,300 L 1021.2,289.1" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<rect x="1010" y="300" width="115" height="50" rx="8" fill="#d0bfff" stroke="none"/>
+<path d="M 1009.8,299.1 L 1125.3,300.0 L 1126.2,349.4 L 1010.8,349.2 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="1067.5" y="321.6" font-size="13" text-anchor="middle" fill="#1e1e1e">in_proj_k(h_t)</text>
+<text x="1067.5" y="337.5" font-size="13" text-anchor="middle" fill="#1e1e1e">+ emb(c1)</text>
+<rect x="1010" y="200" width="115" height="60" rx="8" fill="#d0bfff" stroke="none"/>
+<path d="M 1011.0,199.7 L 1125.0,200.7 L 1125.0,259.3 L 1008.8,260.9 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="1067.5" y="226.4" font-size="14" text-anchor="middle" fill="#1e1e1e">6 layers</text>
+<text x="1067.5" y="243.4" font-size="14" text-anchor="middle" fill="#1e1e1e">per-k weights</text>
+<rect x="1010" y="110" width="115" height="50" rx="8" fill="#b2f2bb" stroke="none"/>
+<path d="M 1010.2,109.5 L 1124.0,109.4 L 1124.4,159.3 L 1009.6,161.1 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="1067.5" y="139.9" font-size="14" text-anchor="middle" fill="#1e1e1e">head_k -&gt; c2</text>
+<path d="M 1067,300 L 1067,260" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 1071.5,270.0 L 1067,260 L 1062.5,270.0" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 1067,200 L 1067,160" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 1071.5,170.0 L 1067,160 L 1062.5,170.0" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 1110,160 L 1155,300" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-dasharray="7 5" stroke-linejoin="round"/>
+<path d="M 1147.7,291.8 L 1155,300 L 1156.2,289.1" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<rect x="1145" y="300" width="115" height="50" rx="8" fill="#d0bfff" stroke="none"/>
+<path d="M 1144.6,299.6 L 1259.8,300.5 L 1259.6,351.1 L 1145.4,350.9 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="1202.5" y="321.6" font-size="13" text-anchor="middle" fill="#1e1e1e">in_proj_k(h_t)</text>
+<text x="1202.5" y="337.5" font-size="13" text-anchor="middle" fill="#1e1e1e">+ emb(c2)</text>
+<rect x="1145" y="200" width="115" height="60" rx="8" fill="#d0bfff" stroke="none"/>
+<path d="M 1144.6,199.6 L 1261.1,200.5 L 1258.9,260.4 L 1143.9,260.6 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="1202.5" y="226.4" font-size="14" text-anchor="middle" fill="#1e1e1e">6 layers</text>
+<text x="1202.5" y="243.4" font-size="14" text-anchor="middle" fill="#1e1e1e">per-k weights</text>
+<rect x="1145" y="110" width="115" height="50" rx="8" fill="#b2f2bb" stroke="none"/>
+<path d="M 1145.3,110.8 L 1260.8,108.9 L 1260.0,161.1 L 1145.8,160.5 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="1202.5" y="139.9" font-size="14" text-anchor="middle" fill="#1e1e1e">head_k -&gt; ... c7</text>
+<path d="M 1202,300 L 1202,260" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 1206.5,270.0 L 1202,260 L 1197.5,270.0" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 1202,200 L 1202,160" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 1206.5,170.0 L 1202,160 L 1197.5,170.0" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="740.0" y="371.9" font-size="14" text-anchor="start" fill="#1e1e1e">6 layers, 8 heads, d = 512; teacher forcing in training</text>
+<text x="720.0" y="432.8" font-size="15" text-anchor="start" fill="#1e1e1e">413.2 M parameters in total; 8 tokens of speaker A per 80 ms frame</text></svg>

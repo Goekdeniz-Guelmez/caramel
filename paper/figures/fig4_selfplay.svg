@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="536" viewBox="0 0 1060 536" font-family="Helvetica, Arial, sans-serif"><rect width="100%" height="100%" fill="#ffffff"/><text x="40.0" y="507.0" font-size="20" text-anchor="start" font-weight="bold" fill="#1e1e1e">Live inference and self-play: same weights, two rows of a batch</text>
+<rect x="40" y="70" width="250" height="80" rx="8" fill="#a5d8ff" stroke="none"/>
+<path d="M 39.1,69.6 L 290.5,70.1 L 290.5,150.7 L 40.9,150.5 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="165.0" y="105.8" font-size="16" text-anchor="middle" fill="#1e1e1e">row 0: model as A</text>
+<text x="165.0" y="125.4" font-size="16" text-anchor="middle" fill="#1e1e1e">input [A0 | B0]</text>
+<rect x="40" y="230" width="250" height="80" rx="8" fill="#ffd8a8" stroke="none"/>
+<path d="M 39.0,230.1 L 290.5,230.7 L 290.7,309.4 L 39.5,309.8 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="165.0" y="265.8" font-size="16" text-anchor="middle" fill="#1e1e1e">row 1: model as B</text>
+<text x="165.0" y="285.4" font-size="16" text-anchor="middle" fill="#1e1e1e">input [B1 | A1] (swapped)</text>
+<rect x="420" y="140" width="220" height="90" rx="8" fill="#d0bfff" stroke="none"/>
+<path d="M 419.7,139.6 L 640.2,140.6 L 639.4,229.1 L 420.7,230.0 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="530.0" y="180.8" font-size="16" text-anchor="middle" fill="#1e1e1e">caramel step</text>
+<text x="530.0" y="200.4" font-size="16" text-anchor="middle" fill="#1e1e1e">(one 80 ms frame)</text>
+<path d="M 290,110 L 420,170" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 409.0,169.9 L 420,170 L 412.8,161.7" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 290,270 L 420,200" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 413.3,208.7 L 420,200 L 409.0,200.8" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<rect x="760" y="70" width="200" height="80" rx="8" fill="#a5d8ff" stroke="none"/>
+<path d="M 759.1,69.5 L 959.3,69.7 L 960.4,151.1 L 759.5,149.0 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="860.0" y="115.6" font-size="16" text-anchor="middle" fill="#1e1e1e">8 tokens for A</text>
+<rect x="760" y="230" width="200" height="80" rx="8" fill="#ffd8a8" stroke="none"/>
+<path d="M 759.1,230.0 L 960.9,230.1 L 959.5,309.4 L 758.9,310.3 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="860.0" y="275.6" font-size="16" text-anchor="middle" fill="#1e1e1e">8 tokens for B</text>
+<path d="M 640,170 L 760,110" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 753.0,118.5 L 760,110 L 749.0,110.5" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 640,200 L 760,270" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 749.1,268.8 L 760,270 L 753.6,261.1" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 960,110 L 1010,110 L 1010,340 L 40,340 L 40,310" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-dasharray="7 5" stroke-linejoin="round"/>
+<path d="M 44.5,320.0 L 40,310 L 35.5,320.0" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="525.0" y="357.9" font-size="14" text-anchor="middle" fill="#1e1e1e">A's tokens are row 1's 'other' input</text>
+<path d="M 960,270 L 1040,270 L 1040,30 L 165,30 L 165,70" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-dasharray="7 5" stroke-linejoin="round"/>
+<path d="M 160.5,60.0 L 165,70 L 169.5,60.0" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="602.5" y="27.9" font-size="14" text-anchor="middle" fill="#1e1e1e">B's tokens are row 0's 'other' input</text>
+<rect x="40" y="400" width="920" height="70" rx="8" fill="#fff3bf" stroke="none"/>
+<path d="M 39.2,400.3 L 959.2,400.9 L 961.1,470.7 L 41.0,470.0 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="500.0" y="431.1" font-size="15" text-anchor="middle" fill="#1e1e1e">live mode: row 1 is replaced by the microphone (Mimi-encoded each 80 ms); forced[...] &gt;= 0 pins tokens</text>
+<text x="500.0" y="449.4" font-size="15" text-anchor="middle" fill="#1e1e1e">real time = 80 ms/frame; ~11x real time on GPU, ~4x for both copies on an M3 Pro (README)</text></svg>

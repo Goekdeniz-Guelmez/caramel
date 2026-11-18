@@ -186,11 +186,111 @@ python generate.py --model runs/s3/best    # best/ is already a model folder: co
 ```
 
 ## synthetic conversations
-`synthetic/` generates two-speaker conversations with a text teacher (Ollama or a local MLX model) and two Gradium Phonon
+`synthetic/` generates two-speaker conversations with a text teacher (Ollama or a local MLX model) and Gradium Phonon
 voices (on-device TTS), including barge-ins, "wait a minute" / "listen until I'm done" holds and backchannels.
-Only the two aligned audio tracks reach caramel. Run [synthetic_data.ipynb](synthetic_data.ipynb)
-(extra installs: `uv pip install openai datasets ptts mlx-vlm tqdm`); its last cells write `prepare.py --manifest`
-files and tokenize them into `data/synthetic_tokens_{train,validation}` for `train.py --data ... --dev ...`.
+A forced aligner checks every utterance against its text (match below 0.8 is dropped) and gives the word timings
+that place both speakers on one timeline. Only the two aligned audio tracks reach caramel, as Mimi tokens.
+
+Generation runs in chunks: `CHUNK_SIZE` conversations are built (`workers` of them in parallel), tokenized, uploaded to a
+Hugging Face dataset repo as parquet shards, and their audio is deleted, so a dataset larger than the disk can be made on
+a laptop. `train.py --data hf://<repo> --dev hf://<repo>` streams it. Extra installs: `uv pip install openai datasets ptts mlx-vlm tqdm`.
+
+There are two notebooks, one per training stage:
+
+| notebook | stage | speaker A | speaker B | train with |
+|---|---|---|---|---|
+| [synthetic_pretrain.ipynb](synthetic_pretrain.ipynb) | pretraining: learn to converse | random voice | random voice (never A's) | `train.py` (both sides, speakers swapped) |
+| [synthetic_data.ipynb](synthetic_data.ipynb) | assistant fine-tune (JOSIE) | JOSIE, always *Zoey* | random user voice | `train.py --no_swap` (JOSIE's side only) |
+
+### fine-tuning an assistant: train one side only
+By default every window is trained in both speaker orders, so the model learns to be either person. That is right for
+pretraining, and wrong for an assistant. On 137 h of JOSIE conversations ([josie-live-synthetic](https://huggingface.co/datasets/Goekdeniz-Guelmez/josie-live-synthetic),
+1,431 conversations, 8 teacher turns at most for most of them), a both-sides fine-tune of `caramel-1` lowered dev loss from 1.636 to 1.321,
+but in use it often spoke in a *user* voice (25 user voices, many male, against one JOSIE voice) and talked over the person,
+because half its training was the user side, where the barge-ins are.
+
+The loss is only computed on speaker A's codebooks (the first 8 columns), so `--no_swap` keeps JOSIE as speaker A in
+every window: the user side is still input, but the model never learns to produce it. Dev loss is then scored on JOSIE's side
+only (so it starts higher, 2.92 instead of 1.64, and the two numbers can't be compared).
+
+The intended recipe:
+
+```bash
+# 1. conversation pretraining, both sides (real conversations + synthetic pretrain data)
+python train.py --data data/stereo hf://<user>/caramel-synthetic-pretrain --weights 0.7 0.3 --init ./caramel-1 --epochs 2 --lr 1e-4 \
+  --dev hf://<user>/caramel-synthetic-pretrain --eval_every 50 --save_best --out runs/pretrain-synth
+# 2. assistant fine-tune, JOSIE's side only
+python train.py --data hf://<user>/josie-live-synthetic --dev hf://<user>/josie-live-synthetic --no_swap \
+  --init runs/pretrain-synth/best --epochs 3 --lr 1e-4 --eval_every 50 --save_best --out runs/josie
+```
+
+Notes from the runs so far: an 8-worker, 8-turn run made about 9-10 h of training audio per hour on an M-series Mac with a
+cloud teacher; about a quarter of conversations are dropped, mostly by the alignment check (reasons are in the repo's `meta.json["skipped"]`).
+A model fine-tuned on synthetic speech only sounds like Phonon and under-uses the other side of the conversation; mixing in real
+conversations is the next step.
+
+### reinforcement learning for live behaviour (`rl.py`)
+A lower dev loss doesn't guarantee good live behaviour: the model can still talk over the user or drift into another voice.
+`rl.py` is a third stage after the supervised fine-tune. It trains on what the model actually does when it speaks for itself.
+
+**What other full-duplex models do.** Moshi itself is trained only with cross-entropy (text pretraining, audio
+pretraining, multi-stream post-training, Fisher, then synthetic instruct data). It gets its single voice by voicing all
+instruct data with one actor, not by RL ([Moshi](https://arxiv.org/abs/2410.00037)). Meta's Seamless Interaction trains
+flow-matching motion models and uses human preference only for evaluation
+([Seamless Interaction](https://arxiv.org/abs/2506.22554)). RL shows up in later work:
+
+| work | base | method | signal | trained tokens |
+|---|---|---|---|---|
+| [Aligning Spoken Dialogue Models from User Interactions](https://arxiv.org/abs/2506.21463) (Kyutai) | Moshi | offline DPO, length-normalized (DPO-LN; also SimPO, APO-Zero), β 0.3, LR 5e-9 temporal / 1e-6 depth | LLM judge on real user sessions; timing pairs: interrupting / long silence vs. waiting / answering | text stream only (adding the audio-token loss hurt) |
+| [Hibiki-Zero](https://arxiv.org/abs/2602.11072) (Kyutai) | Hibiki multistream | GRPO, group 4, PPO clip 0.2, no KL, LR 2e-7, 2k updates, 120 s rollouts with the input forced | BLEU process rewards at checkpoints, normalized per checkpoint across the group | text + all audio codebooks (text ×100) |
+| [DuplexPO](https://arxiv.org/abs/2607.07148) | full-duplex SLM | GRPO-style RL localized to windows around turn events, regularized to the SFT model | turn start, backchannel, yield, participation | event windows |
+| [BayLing-Duplex](https://arxiv.org/abs/2606.14528) | GLM-4-Voice | SFT, then a light DPO stage | correct vs. shifted turn / barge-in timing | n/a |
+
+caramel has no text stream, so `rl.py` follows the Hibiki-Zero / DuplexPO recipe on audio tokens. That recipe is online
+GRPO with the input stream forced, process rewards, and credit given locally around turn events.
+
+**How it works.** Each step draws real windows (`--seconds`, default 60). For each window it samples `--group` rollouts in which the
+user side is the real recording, forced frame by frame the way `live.py` feeds the microphone. The first `--prefix_s` seconds
+of speaker A are the real assistant, and after that the model speaks for itself. Every track is decoded with Mimi. 80 ms
+frame energy (`--vad_db`, default −45 dBFS; Mimi silence decodes to about −73 and speech to −30 to −17) gives who is
+talking, and a log-mel profile gives whose voice it is. The reward events are:
+
+| event | when | reward |
+|---|---|---|
+| `yield` | the user starts talking (≥ 0.64 s) while A talks | +1 if A falls silent within 1 s, else −1 |
+| `talkover` | A starts while the user talks and overlaps for more than 1 s (shorter = backchannel) | −1 |
+| `respond` | the user ends a turn and A starts within 1.5 s | +0.5 |
+| `dead_air` | both silent for more than 3 s, and again for every further 3 s | −1 |
+| `voice` | per 2 s chunk of A's speech: cos(A, assistant profile) − cos(A, this user's profile) | −2 to +2 |
+
+Rewards are summed per 2 s chunk and normalized across the group of each window. A token's advantage is the discounted sum
+(`--gamma 0.5` per chunk) of normalized chunk rewards from its own chunk on. The loss is the PPO-clipped ratio on all 8
+of A's codebooks, plus `--kl` (k3 estimator) toward the starting model and optionally `--sft`, cross-entropy on the
+real windows, so voice and content don't drift. `--algo dpo` instead takes the best and worst rollout of each group as a
+pair and trains DPO-LN against the starting model.
+Each step logs the rate and mean of each event, and the same numbers for the real assistant on the same windows (`data`).
+
+```bash
+# baseline: score the supervised model without training (bf16, no optimizer)
+python rl.py --init runs/josie/best --data hf://<user>/josie-live-synthetic --steps 0 --batches 8 --dump --out runs/josie-rl-score
+# GRPO
+python rl.py --init runs/josie/best --data hf://<user>/josie-live-synthetic --steps 200 --kl 0.02 --sft 0.1 --dump --out runs/josie-rl
+# score a snapshot the same way, then compare it with the baseline and listen to samples/
+python rl.py --init runs/josie-rl/step00100 --data hf://<user>/josie-live-synthetic --steps 0 --batches 8 --out runs/josie-rl-100
+```
+
+Snapshots go to `step00025/`, `step00050/` and so on (bf16 model folders). Kyutai's DPO peaked within the first 30% of a pass and then over-optimized,
+so pick a snapshot by score and by ear, not just the last one. Things to know:
+
+- **The user is replayed, not reactive.** The user track was recorded against the real assistant, so the rewards measure
+  A's timing against a fixed partner. A reactive user (a second model row, as in `generate.py`) would be the next step.
+- **The rewards ignore content.** They only cover timing and voice. Watch `talk` (A's talking fraction) against the data
+  and listen to `samples/`, because a policy can game timing rewards with filler sounds.
+- **The voice score is a crude proxy** (a log-mel profile, not a speaker embedding). In a first check, `caramel-1`
+  rollouts that continue JOSIE scored +0.85 and random-weight noise scored about −0.4.
+- The VAD threshold suits clean synthetic tracks. Noisy real recordings need a different `--vad_db`.
+- **Memory:** a float32 policy, Adam state and a bf16 reference come to about 6 GB for `caramel-1`, plus activations for
+  `--mb` rows of `--seconds`. Lower `--mb` or `--seconds` if that runs out of memory.
 
 ## license
 

@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="330" viewBox="0 0 1240 330" font-family="Helvetica, Arial, sans-serif"><rect width="100%" height="100%" fill="#ffffff"/><text x="20.0" y="27.0" font-size="20" text-anchor="start" font-weight="bold" fill="#1e1e1e">Training recipe: caramel-1 (released) -&gt; synthetic pretrain -&gt; JOSIE fine-tune</text>
+<rect x="20" y="70" width="250" height="140" rx="8" fill="#e9ecef" stroke="none"/>
+<path d="M 19.7,69.9 L 269.1,70.7 L 269.6,209.0 L 20.3,211.2 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="145.0" y="110.7" font-size="14" text-anchor="middle" fill="#1e1e1e">caramel-1 (README)</text>
+<text x="145.0" y="127.8" font-size="14" text-anchor="middle" fill="#1e1e1e">1. one-person speech, 27 min</text>
+<text x="145.0" y="144.9" font-size="14" text-anchor="middle" fill="#1e1e1e">2. 5,743 h conv., 46 min</text>
+<text x="145.0" y="162.0" font-size="14" text-anchor="middle" fill="#1e1e1e">3. keep going, 61 min</text>
+<text x="145.0" y="179.1" font-size="14" text-anchor="middle" fill="#1e1e1e">11,555 h total</text>
+<rect x="330" y="70" width="300" height="140" rx="8" fill="#d0bfff" stroke="none"/>
+<path d="M 330.5,70.6 L 629.4,69.2 L 629.7,211.0 L 329.6,209.8 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="480.0" y="110.7" font-size="14" text-anchor="middle" fill="#1e1e1e">stage A: synthetic pretrain</text>
+<text x="480.0" y="127.8" font-size="14" text-anchor="middle" fill="#1e1e1e">random voice on both sides</text>
+<text x="480.0" y="144.9" font-size="14" text-anchor="middle" fill="#1e1e1e">(B never A's voice)</text>
+<text x="480.0" y="162.0" font-size="14" text-anchor="middle" fill="#1e1e1e">both speaker orders</text>
+<text x="480.0" y="179.1" font-size="14" text-anchor="middle" fill="#1e1e1e">mix 0.7 real : 0.3 synthetic</text>
+<rect x="690" y="70" width="300" height="140" rx="8" fill="#a5d8ff" stroke="none"/>
+<path d="M 689.1,70.9 L 990.3,69.5 L 990.6,210.8 L 688.9,210.7 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="840.0" y="110.7" font-size="14" text-anchor="middle" fill="#1e1e1e">stage B: assistant fine-tune</text>
+<text x="840.0" y="127.8" font-size="14" text-anchor="middle" fill="#1e1e1e">JOSIE = Zoey as A</text>
+<text x="840.0" y="144.9" font-size="14" text-anchor="middle" fill="#1e1e1e">random user voice as B</text>
+<text x="840.0" y="162.0" font-size="14" text-anchor="middle" fill="#1e1e1e">--no_swap: loss on A only</text>
+<text x="840.0" y="179.1" font-size="14" text-anchor="middle" fill="#1e1e1e">lr 1e-4, 3 epochs</text>
+<rect x="1050" y="95" width="170" height="90" rx="8" fill="#b2f2bb" stroke="none"/>
+<path d="M 1050.7,94.9 L 1218.8,95.9 L 1220.6,184.0 L 1050.9,184.4 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="1135.0" y="126.1" font-size="16" text-anchor="middle" fill="#1e1e1e">JOSIE</text>
+<text x="1135.0" y="145.6" font-size="16" text-anchor="middle" fill="#1e1e1e">full-duplex</text>
+<text x="1135.0" y="165.1" font-size="16" text-anchor="middle" fill="#1e1e1e">assistant</text>
+<path d="M 270,140 L 330,140" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 320.0,144.5 L 330,140 L 320.0,135.5" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="300.0" y="127.9" font-size="14" text-anchor="middle" fill="#1e1e1e">--init</text>
+<path d="M 630,140 L 690,140" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 680.0,144.5 L 690,140 L 680.0,135.5" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="660.0" y="127.9" font-size="14" text-anchor="middle" fill="#1e1e1e">--init</text>
+<path d="M 990,140 L 1050,140" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 1040.0,144.5 L 1050,140 L 1040.0,135.5" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<rect x="330" y="250" width="660" height="60" rx="8" fill="#fff3bf" stroke="none"/>
+<path d="M 329.8,250.2 L 990.4,249.7 L 991.1,309.5 L 330.8,309.7 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="660.0" y="276.4" font-size="14" text-anchor="middle" fill="#1e1e1e">status: stage A data notebook (synthetic_pretrain.ipynb) exists; stage A not yet trained.</text>
+<text x="660.0" y="293.4" font-size="14" text-anchor="middle" fill="#1e1e1e">Runs in this paper: caramel-1 -&gt; stage B directly (swap and --no_swap).</text></svg>

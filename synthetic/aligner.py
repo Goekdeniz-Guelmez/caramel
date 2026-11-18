@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import threading
 from pathlib import Path
 from typing import Any
 
@@ -17,6 +18,11 @@ import numpy as np
 from synthetic.audio import Speech, SpeechAlignmentError, Word, prepare_mono_audio, transcript_match
 
 DEFAULT_ALIGNER_MODEL = "mlx-community/Qwen3-ForcedAligner-0.6B-8bit"
+
+
+# MLX models (TTS, aligner) are not safe to call from several threads at once; parallel episodes share this lock,
+# so their teacher requests overlap with each other's GPU work instead.
+GPU_LOCK = threading.RLock()
 
 
 class AlignedSpeech:
@@ -216,7 +222,8 @@ class AlignedSpeech:
         audio_path = self.cache_dir / f"{key}.wav"
         if not audio_path.exists():
             temporary_audio = audio_path.with_suffix(".partial.wav")
-            self.synthesize_to_file(text, role, temporary_audio)
+            with GPU_LOCK:
+                self.synthesize_to_file(text, role, temporary_audio)
             sf.info(temporary_audio)
             temporary_audio.replace(audio_path)
         waveform, source_rate = sf.read(
@@ -256,9 +263,10 @@ class AlignedSpeech:
                 alignment_path.unlink(missing_ok=True)
         if aligned_rows is None:
             try:
-                aligned_rows, words, match = self._align_with_recovery(
-                    waveform, text, duration
-                )
+                with GPU_LOCK:
+                    aligned_rows, words, match = self._align_with_recovery(
+                        waveform, text, duration
+                    )
             except SpeechAlignmentError as exc:
                 unaligned_speech = Speech(
                     waveform,

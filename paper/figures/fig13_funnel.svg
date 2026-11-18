@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1140" height="491" viewBox="0 0 1140 491" font-family="Helvetica, Arial, sans-serif"><rect width="100%" height="100%" fill="#ffffff"/><text x="20.0" y="27.0" font-size="20" text-anchor="start" font-weight="bold" fill="#1e1e1e">Pre-training data funnel (README numbers)</text>
+<rect x="20.0" y="55" width="1100" height="56" rx="8" fill="#e9ecef" stroke="none"/>
+<path d="M 21.0,53.9 L 1119.9,55.5 L 1118.8,111.7 L 19.7,112.1 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="570.0" y="87.9" font-size="14" text-anchor="middle" fill="#1e1e1e">candidate sources: 66,824 podcast feeds + 3,216 Creative Commons YouTube channels</text>
+<rect x="90.0" y="127" width="960" height="56" rx="8" fill="#fff3bf" stroke="none"/>
+<path d="M 91.1,127.0 L 1050.6,128.0 L 1050.4,182.8 L 90.5,183.7 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="570.0" y="159.9" font-size="14" text-anchor="middle" fill="#1e1e1e">closeness-ranked; only close sources downloaded at scale (~5,400 h of audio per hour of downloading)</text>
+<rect x="160.0" y="199" width="820" height="56" rx="8" fill="#ffd8a8" stroke="none"/>
+<path d="M 160.9,198.6 L 980.4,200.0 L 980.4,256.2 L 160.1,254.2 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="570.0" y="231.9" font-size="14" text-anchor="middle" fill="#1e1e1e">speaker separation of mixed recordings (validated on already-separated tracks)</text>
+<rect x="230.0" y="271" width="680" height="56" rx="8" fill="#c3fae8" stroke="none"/>
+<path d="M 229.2,270.6 L 910.5,271.1 L 910.7,326.9 L 230.5,326.9 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="570.0" y="303.9" font-size="14" text-anchor="middle" fill="#1e1e1e">~6,500 h two-person conversation + ~5,800 h one-person speech</text>
+<rect x="300.0" y="343" width="540" height="56" rx="8" fill="#a5d8ff" stroke="none"/>
+<path d="M 299.7,342.8 L 841.2,341.9 L 838.9,398.3 L 300.8,398.9 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="570.0" y="375.9" font-size="14" text-anchor="middle" fill="#1e1e1e">tokenised: 5,743 h conv. (4.1B tokens) + 5,812 h mono (2.1B) = 11,555 h, 6.2B</text>
+<rect x="370.0" y="415" width="400" height="56" rx="8" fill="#b2f2bb" stroke="none"/>
+<path d="M 369.4,415.6 L 769.8,415.6 L 770.4,472.1 L 370.6,471.0 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="570.0" y="447.9" font-size="14" text-anchor="middle" fill="#1e1e1e">trained: ~33B tokens seen (multiple passes)</text></svg>

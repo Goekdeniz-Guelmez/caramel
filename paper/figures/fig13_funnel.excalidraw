@@ -1,0 +1,271 @@
+{
+ "type": "excalidraw",
+ "version": 2,
+ "source": "caramel-paper",
+ "elements": [
+  {
+   "type": "text",
+   "id": "t1",
+   "x": 20,
+   "y": 10,
+   "width": 410.0,
+   "height": 25.0,
+   "text": "Pre-training data funnel (README numbers)",
+   "originalText": "Pre-training data funnel (README numbers)",
+   "fontSize": 20,
+   "fontFamily": 1,
+   "strokeColor": "#1e1e1e",
+   "autoResize": true
+  },
+  {
+   "type": "rectangle",
+   "id": "s2",
+   "x": 20.0,
+   "y": 55,
+   "width": 1100,
+   "height": 56,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#e9ecef",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "opacity": 100,
+   "strokeStyle": "solid",
+   "roundness": {
+    "type": 3
+   },
+   "boundElements": [
+    {
+     "id": "t3",
+     "type": "text"
+    }
+   ]
+  },
+  {
+   "type": "text",
+   "id": "t3",
+   "x": 25.0,
+   "y": 60,
+   "width": 1090,
+   "height": 46,
+   "text": "candidate sources: 66,824 podcast feeds + 3,216 Creative Commons YouTube channels",
+   "originalText": "candidate sources: 66,824 podcast feeds + 3,216 Creative Commons YouTube channels",
+   "fontSize": 14,
+   "fontFamily": 1,
+   "strokeColor": "#1e1e1e",
+   "textAlign": "center",
+   "verticalAlign": "middle",
+   "containerId": "s2",
+   "autoResize": true
+  },
+  {
+   "type": "rectangle",
+   "id": "s4",
+   "x": 90.0,
+   "y": 127,
+   "width": 960,
+   "height": 56,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#fff3bf",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "opacity": 100,
+   "strokeStyle": "solid",
+   "roundness": {
+    "type": 3
+   },
+   "boundElements": [
+    {
+     "id": "t5",
+     "type": "text"
+    }
+   ]
+  },
+  {
+   "type": "text",
+   "id": "t5",
+   "x": 95.0,
+   "y": 132,
+   "width": 950,
+   "height": 46,
+   "text": "closeness-ranked; only close sources downloaded at scale (~5,400 h of audio per hour of downloading)",
+   "originalText": "closeness-ranked; only close sources downloaded at scale (~5,400 h of audio per hour of downloading)",
+   "fontSize": 14,
+   "fontFamily": 1,
+   "strokeColor": "#1e1e1e",
+   "textAlign": "center",
+   "verticalAlign": "middle",
+   "containerId": "s4",
+   "autoResize": true
+  },
+  {
+   "type": "rectangle",
+   "id": "s6",
+   "x": 160.0,
+   "y": 199,
+   "width": 820,
+   "height": 56,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#ffd8a8",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "opacity": 100,
+   "strokeStyle": "solid",
+   "roundness": {
+    "type": 3
+   },
+   "boundElements": [
+    {
+     "id": "t7",
+     "type": "text"
+    }
+   ]
+  },
+  {
+   "type": "text",
+   "id": "t7",
+   "x": 165.0,
+   "y": 204,
+   "width": 810,
+   "height": 46,
+   "text": "speaker separation of mixed recordings (validated on already-separated tracks)",
+   "originalText": "speaker separation of mixed recordings (validated on already-separated tracks)",
+   "fontSize": 14,
+   "fontFamily": 1,
+   "strokeColor": "#1e1e1e",
+   "textAlign": "center",
+   "verticalAlign": "middle",
+   "containerId": "s6",
+   "autoResize": true
+  },
+  {
+   "type": "rectangle",
+   "id": "s8",
+   "x": 230.0,
+   "y": 271,
+   "width": 680,
+   "height": 56,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#c3fae8",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "opacity": 100,
+   "strokeStyle": "solid",
+   "roundness": {
+    "type": 3
+   },
+   "boundElements": [
+    {
+     "id": "t9",
+     "type": "text"
+    }
+   ]
+  },
+  {
+   "type": "text",
+   "id": "t9",
+   "x": 235.0,
+   "y": 276,
+   "width": 670,
+   "height": 46,
+   "text": "~6,500 h two-person conversation + ~5,800 h one-person speech",
+   "originalText": "~6,500 h two-person conversation + ~5,800 h one-person speech",
+   "fontSize": 14,
+   "fontFamily": 1,
+   "strokeColor": "#1e1e1e",
+   "textAlign": "center",
+   "verticalAlign": "middle",
+   "containerId": "s8",
+   "autoResize": true
+  },
+  {
+   "type": "rectangle",
+   "id": "s10",
+   "x": 300.0,
+   "y": 343,
+   "width": 540,
+   "height": 56,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#a5d8ff",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "opacity": 100,
+   "strokeStyle": "solid",
+   "roundness": {
+    "type": 3
+   },
+   "boundElements": [
+    {
+     "id": "t11",
+     "type": "text"
+    }
+   ]
+  },
+  {
+   "type": "text",
+   "id": "t11",
+   "x": 305.0,
+   "y": 348,
+   "width": 530,
+   "height": 46,
+   "text": "tokenised: 5,743 h conv. (4.1B tokens) + 5,812 h mono (2.1B) = 11,555 h, 6.2B",
+   "originalText": "tokenised: 5,743 h conv. (4.1B tokens) + 5,812 h mono (2.1B) = 11,555 h, 6.2B",
+   "fontSize": 14,
+   "fontFamily": 1,
+   "strokeColor": "#1e1e1e",
+   "textAlign": "center",
+   "verticalAlign": "middle",
+   "containerId": "s10",
+   "autoResize": true
+  },
+  {
+   "type": "rectangle",
+   "id": "s12",
+   "x": 370.0,
+   "y": 415,
+   "width": 400,
+   "height": 56,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#b2f2bb",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "opacity": 100,
+   "strokeStyle": "solid",
+   "roundness": {
+    "type": 3
+   },
+   "boundElements": [
+    {
+     "id": "t13",
+     "type": "text"
+    }
+   ]
+  },
+  {
+   "type": "text",
+   "id": "t13",
+   "x": 375.0,
+   "y": 420,
+   "width": 390,
+   "height": 46,
+   "text": "trained: ~33B tokens seen (multiple passes)",
+   "originalText": "trained: ~33B tokens seen (multiple passes)",
+   "fontSize": 14,
+   "fontFamily": 1,
+   "strokeColor": "#1e1e1e",
+   "textAlign": "center",
+   "verticalAlign": "middle",
+   "containerId": "s12",
+   "autoResize": true
+  }
+ ],
+ "appState": {
+  "viewBackgroundColor": "#ffffff"
+ },
+ "files": {}
+}

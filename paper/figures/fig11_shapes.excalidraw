@@ -1,0 +1,456 @@
+{
+ "type": "excalidraw",
+ "version": 2,
+ "source": "caramel-paper",
+ "elements": [
+  {
+   "type": "text",
+   "id": "t1",
+   "x": 20,
+   "y": 10,
+   "width": 750.0,
+   "height": 25.0,
+   "text": "One training forward pass with tensor shapes (B windows, T frames, N = B*T)",
+   "originalText": "One training forward pass with tensor shapes (B windows, T frames, N = B*T)",
+   "fontSize": 20,
+   "fontFamily": 1,
+   "strokeColor": "#1e1e1e",
+   "autoResize": true
+  },
+  {
+   "type": "rectangle",
+   "id": "s2",
+   "x": 20,
+   "y": 55,
+   "width": 1150,
+   "height": 55,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#fff3bf",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "opacity": 100,
+   "strokeStyle": "solid",
+   "roundness": {
+    "type": 3
+   },
+   "boundElements": [
+    {
+     "id": "t3",
+     "type": "text"
+    }
+   ]
+  },
+  {
+   "type": "text",
+   "id": "t3",
+   "x": 25,
+   "y": 60,
+   "width": 1140,
+   "height": 45,
+   "text": "seq  [B, T+1, 16]  int, delayed, start token S = 2048",
+   "originalText": "seq  [B, T+1, 16]  int, delayed, start token S = 2048",
+   "fontSize": 15,
+   "fontFamily": 1,
+   "strokeColor": "#1e1e1e",
+   "textAlign": "center",
+   "verticalAlign": "middle",
+   "containerId": "s2",
+   "autoResize": true
+  },
+  {
+   "type": "rectangle",
+   "id": "s4",
+   "x": 20,
+   "y": 130,
+   "width": 1150,
+   "height": 55,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#fff3bf",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "opacity": 100,
+   "strokeStyle": "solid",
+   "roundness": {
+    "type": 3
+   },
+   "boundElements": [
+    {
+     "id": "t5",
+     "type": "text"
+    }
+   ]
+  },
+  {
+   "type": "text",
+   "id": "t5",
+   "x": 25,
+   "y": 135,
+   "width": 1140,
+   "height": 45,
+   "text": "inp = seq[:, :-1]  ->  flat embedding gather E[k*2049 + tok] (zero where tok = -1)  ->  sum over 16 codebooks  [B, T, 1024]",
+   "originalText": "inp = seq[:, :-1]  ->  flat embedding gather E[k*2049 + tok] (zero where tok = -1)  ->  sum over 16 codebooks  [B, T, 1024]",
+   "fontSize": 15,
+   "fontFamily": 1,
+   "strokeColor": "#1e1e1e",
+   "textAlign": "center",
+   "verticalAlign": "middle",
+   "containerId": "s4",
+   "autoResize": true
+  },
+  {
+   "type": "arrow",
+   "id": "a6",
+   "x": 595,
+   "y": 110,
+   "width": 0,
+   "height": 20,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     20
+    ]
+   ],
+   "endArrowhead": "arrow",
+   "startArrowhead": null,
+   "strokeColor": "#1e1e1e",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "strokeStyle": "solid"
+  },
+  {
+   "type": "rectangle",
+   "id": "s7",
+   "x": 20,
+   "y": 205,
+   "width": 1150,
+   "height": 55,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#a5d8ff",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "opacity": 100,
+   "strokeStyle": "solid",
+   "roundness": {
+    "type": 3
+   },
+   "boundElements": [
+    {
+     "id": "t8",
+     "type": "text"
+    }
+   ]
+  },
+  {
+   "type": "text",
+   "id": "t8",
+   "x": 25,
+   "y": 210,
+   "width": 1140,
+   "height": 45,
+   "text": "temporal transformer x16: RMSNorm -> QKV [B, 16, T, 64] + RoPE -> causal SDPA -> SwiGLU (2816)  [B, T, 1024]",
+   "originalText": "temporal transformer x16: RMSNorm -> QKV [B, 16, T, 64] + RoPE -> causal SDPA -> SwiGLU (2816)  [B, T, 1024]",
+   "fontSize": 15,
+   "fontFamily": 1,
+   "strokeColor": "#1e1e1e",
+   "textAlign": "center",
+   "verticalAlign": "middle",
+   "containerId": "s7",
+   "autoResize": true
+  },
+  {
+   "type": "arrow",
+   "id": "a9",
+   "x": 595,
+   "y": 185,
+   "width": 0,
+   "height": 20,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     20
+    ]
+   ],
+   "endArrowhead": "arrow",
+   "startArrowhead": null,
+   "strokeColor": "#1e1e1e",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "strokeStyle": "solid"
+  },
+  {
+   "type": "rectangle",
+   "id": "s10",
+   "x": 20,
+   "y": 280,
+   "width": 1150,
+   "height": 55,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#a5d8ff",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "opacity": 100,
+   "strokeStyle": "solid",
+   "roundness": {
+    "type": 3
+   },
+   "boundElements": [
+    {
+     "id": "t11",
+     "type": "text"
+    }
+   ]
+  },
+  {
+   "type": "text",
+   "id": "t11",
+   "x": 25,
+   "y": 285,
+   "width": 1140,
+   "height": 45,
+   "text": "out RMSNorm, reshape  h  [N, 1024]",
+   "originalText": "out RMSNorm, reshape  h  [N, 1024]",
+   "fontSize": 15,
+   "fontFamily": 1,
+   "strokeColor": "#1e1e1e",
+   "textAlign": "center",
+   "verticalAlign": "middle",
+   "containerId": "s10",
+   "autoResize": true
+  },
+  {
+   "type": "arrow",
+   "id": "a12",
+   "x": 595,
+   "y": 260,
+   "width": 0,
+   "height": 20,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     20
+    ]
+   ],
+   "endArrowhead": "arrow",
+   "startArrowhead": null,
+   "strokeColor": "#1e1e1e",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "strokeStyle": "solid"
+  },
+  {
+   "type": "rectangle",
+   "id": "s13",
+   "x": 20,
+   "y": 355,
+   "width": 1150,
+   "height": 55,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#d0bfff",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "opacity": 100,
+   "strokeStyle": "solid",
+   "roundness": {
+    "type": 3
+   },
+   "boundElements": [
+    {
+     "id": "t14",
+     "type": "text"
+    }
+   ]
+  },
+  {
+   "type": "text",
+   "id": "t14",
+   "x": 25,
+   "y": 360,
+   "width": 1140,
+   "height": 45,
+   "text": "dep_in fan-out (8 per-codebook linears)  [8, N, 512]  +  dep_emb(tgt cb 0..6) shifted by one  [8, N, 512]",
+   "originalText": "dep_in fan-out (8 per-codebook linears)  [8, N, 512]  +  dep_emb(tgt cb 0..6) shifted by one  [8, N, 512]",
+   "fontSize": 15,
+   "fontFamily": 1,
+   "strokeColor": "#1e1e1e",
+   "textAlign": "center",
+   "verticalAlign": "middle",
+   "containerId": "s13",
+   "autoResize": true
+  },
+  {
+   "type": "arrow",
+   "id": "a15",
+   "x": 595,
+   "y": 335,
+   "width": 0,
+   "height": 20,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     20
+    ]
+   ],
+   "endArrowhead": "arrow",
+   "startArrowhead": null,
+   "strokeColor": "#1e1e1e",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "strokeStyle": "solid"
+  },
+  {
+   "type": "rectangle",
+   "id": "s16",
+   "x": 20,
+   "y": 430,
+   "width": 1150,
+   "height": 55,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#d0bfff",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "opacity": 100,
+   "strokeStyle": "solid",
+   "roundness": {
+    "type": 3
+   },
+   "boundElements": [
+    {
+     "id": "t17",
+     "type": "text"
+    }
+   ]
+  },
+  {
+   "type": "text",
+   "id": "t17",
+   "x": 25,
+   "y": 435,
+   "width": 1140,
+   "height": 45,
+   "text": "depformer x6: per-codebook weights, causal 8x8 attention, 8 heads of 64, SwiGLU (1408)  [8, N, 512]",
+   "originalText": "depformer x6: per-codebook weights, causal 8x8 attention, 8 heads of 64, SwiGLU (1408)  [8, N, 512]",
+   "fontSize": 15,
+   "fontFamily": 1,
+   "strokeColor": "#1e1e1e",
+   "textAlign": "center",
+   "verticalAlign": "middle",
+   "containerId": "s16",
+   "autoResize": true
+  },
+  {
+   "type": "arrow",
+   "id": "a18",
+   "x": 595,
+   "y": 410,
+   "width": 0,
+   "height": 20,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     20
+    ]
+   ],
+   "endArrowhead": "arrow",
+   "startArrowhead": null,
+   "strokeColor": "#1e1e1e",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "strokeStyle": "solid"
+  },
+  {
+   "type": "rectangle",
+   "id": "s19",
+   "x": 20,
+   "y": 505,
+   "width": 1150,
+   "height": 55,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#b2f2bb",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "opacity": 100,
+   "strokeStyle": "solid",
+   "roundness": {
+    "type": 3
+   },
+   "boundElements": [
+    {
+     "id": "t20",
+     "type": "text"
+    }
+   ]
+  },
+  {
+   "type": "text",
+   "id": "t20",
+   "x": 25,
+   "y": 510,
+   "width": 1140,
+   "height": 45,
+   "text": "heads: 8 linears 512 -> 2048  logits [8, N, 2048]  ->  masked CE per codebook  ->  mean of 8",
+   "originalText": "heads: 8 linears 512 -> 2048  logits [8, N, 2048]  ->  masked CE per codebook  ->  mean of 8",
+   "fontSize": 15,
+   "fontFamily": 1,
+   "strokeColor": "#1e1e1e",
+   "textAlign": "center",
+   "verticalAlign": "middle",
+   "containerId": "s19",
+   "autoResize": true
+  },
+  {
+   "type": "arrow",
+   "id": "a21",
+   "x": 595,
+   "y": 485,
+   "width": 0,
+   "height": 20,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     20
+    ]
+   ],
+   "endArrowhead": "arrow",
+   "startArrowhead": null,
+   "strokeColor": "#1e1e1e",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "strokeStyle": "solid"
+  }
+ ],
+ "appState": {
+  "viewBackgroundColor": "#ffffff"
+ },
+ "files": {}
+}

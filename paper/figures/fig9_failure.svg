@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1220" height="330" viewBox="0 0 1220 330" font-family="Helvetica, Arial, sans-serif"><rect width="100%" height="100%" fill="#ffffff"/><text x="20.0" y="27.0" font-size="20" text-anchor="start" font-weight="bold" fill="#1e1e1e">Failure mode of the both-sides fine-tune (josie-synth-overnight2)</text>
+<rect x="20" y="60" width="330" height="120" rx="8" fill="#ffd8a8" stroke="none"/>
+<path d="M 19.9,59.3 L 349.0,59.3 L 350.0,178.9 L 19.8,178.9 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="185.0" y="97.8" font-size="15" text-anchor="middle" fill="#1e1e1e">training windows</text>
+<text x="185.0" y="116.1" font-size="15" text-anchor="middle" fill="#1e1e1e">half as user (B first):</text>
+<text x="185.0" y="134.4" font-size="15" text-anchor="middle" fill="#1e1e1e">25 user voices, barge-ins live</text>
+<text x="185.0" y="152.7" font-size="15" text-anchor="middle" fill="#1e1e1e">on the user side</text>
+<rect x="420" y="60" width="330" height="120" rx="8" fill="#ffc9c9" stroke="none"/>
+<path d="M 420.2,59.0 L 749.5,60.8 L 748.9,179.6 L 420.6,179.2 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="585.0" y="107.0" font-size="15" text-anchor="middle" fill="#1e1e1e">learned: 'whoever I am,</text>
+<text x="585.0" y="125.2" font-size="15" text-anchor="middle" fill="#1e1e1e">interrupt and speak in</text>
+<text x="585.0" y="143.6" font-size="15" text-anchor="middle" fill="#1e1e1e">some catalog voice'</text>
+<path d="M 350,120 L 420,120" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 410.0,124.5 L 420,120 L 410.0,115.5" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<rect x="820" y="40" width="380" height="70" rx="8" fill="#ffc9c9" stroke="none"/>
+<path d="M 819.0,40.0 L 1200.1,39.9 L 1199.7,109.9 L 820.2,109.7 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="1010.0" y="71.1" font-size="15" text-anchor="middle" fill="#1e1e1e">speaker-identity leakage:</text>
+<text x="1010.0" y="89.4" font-size="15" text-anchor="middle" fill="#1e1e1e">JOSIE sometimes in a (male) user voice</text>
+<rect x="820" y="130" width="380" height="70" rx="8" fill="#ffc9c9" stroke="none"/>
+<path d="M 819.5,130.0 L 1200.4,131.1 L 1200.0,199.2 L 819.2,201.1 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="1010.0" y="161.1" font-size="15" text-anchor="middle" fill="#1e1e1e">barge-in imitation:</text>
+<text x="1010.0" y="179.4" font-size="15" text-anchor="middle" fill="#1e1e1e">talks over the user</text>
+<path d="M 750,100 L 820,75" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 812.0,82.6 L 820,75 L 809.0,74.2" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 750,140 L 820,165" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 809.0,165.8 L 820,165 L 812.0,157.4" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<rect x="20" y="240" width="1180" height="70" rx="8" fill="#fff3bf" stroke="none"/>
+<path d="M 19.6,239.1 L 1199.5,240.3 L 1200.5,309.8 L 19.1,310.8 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="610.0" y="271.1" font-size="15" text-anchor="middle" fill="#1e1e1e">self-play, 5 seeds x 30 s from a real opening: JOSIE side active 71%, other side 4% (per seed 0, 0, 14, 5, 0),</text>
+<text x="610.0" y="289.4" font-size="15" text-anchor="middle" fill="#1e1e1e">both 1%, silent 26%; caramel-1 reference for the other side: 32%. Fix: --no_swap (Fig. 7).</text></svg>

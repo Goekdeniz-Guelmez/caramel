@@ -1,0 +1,302 @@
+{
+ "type": "excalidraw",
+ "version": 2,
+ "source": "caramel-paper",
+ "elements": [
+  {
+   "type": "text",
+   "id": "t1",
+   "x": 20,
+   "y": 10,
+   "width": 650.0,
+   "height": 25.0,
+   "text": "Failure mode of the both-sides fine-tune (josie-synth-overnight2)",
+   "originalText": "Failure mode of the both-sides fine-tune (josie-synth-overnight2)",
+   "fontSize": 20,
+   "fontFamily": 1,
+   "strokeColor": "#1e1e1e",
+   "autoResize": true
+  },
+  {
+   "type": "rectangle",
+   "id": "s2",
+   "x": 20,
+   "y": 60,
+   "width": 330,
+   "height": 120,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#ffd8a8",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "opacity": 100,
+   "strokeStyle": "solid",
+   "roundness": {
+    "type": 3
+   },
+   "boundElements": [
+    {
+     "id": "t3",
+     "type": "text"
+    }
+   ]
+  },
+  {
+   "type": "text",
+   "id": "t3",
+   "x": 25,
+   "y": 65,
+   "width": 320,
+   "height": 110,
+   "text": "training windows\nhalf as user (B first):\n25 user voices, barge-ins live\non the user side",
+   "originalText": "training windows\nhalf as user (B first):\n25 user voices, barge-ins live\non the user side",
+   "fontSize": 15,
+   "fontFamily": 1,
+   "strokeColor": "#1e1e1e",
+   "textAlign": "center",
+   "verticalAlign": "middle",
+   "containerId": "s2",
+   "autoResize": true
+  },
+  {
+   "type": "rectangle",
+   "id": "s4",
+   "x": 420,
+   "y": 60,
+   "width": 330,
+   "height": 120,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#ffc9c9",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "opacity": 100,
+   "strokeStyle": "solid",
+   "roundness": {
+    "type": 3
+   },
+   "boundElements": [
+    {
+     "id": "t5",
+     "type": "text"
+    }
+   ]
+  },
+  {
+   "type": "text",
+   "id": "t5",
+   "x": 425,
+   "y": 65,
+   "width": 320,
+   "height": 110,
+   "text": "learned: 'whoever I am,\ninterrupt and speak in\nsome catalog voice'",
+   "originalText": "learned: 'whoever I am,\ninterrupt and speak in\nsome catalog voice'",
+   "fontSize": 15,
+   "fontFamily": 1,
+   "strokeColor": "#1e1e1e",
+   "textAlign": "center",
+   "verticalAlign": "middle",
+   "containerId": "s4",
+   "autoResize": true
+  },
+  {
+   "type": "arrow",
+   "id": "a6",
+   "x": 350,
+   "y": 120,
+   "width": 70,
+   "height": 0,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     70,
+     0
+    ]
+   ],
+   "endArrowhead": "arrow",
+   "startArrowhead": null,
+   "strokeColor": "#1e1e1e",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "strokeStyle": "solid"
+  },
+  {
+   "type": "rectangle",
+   "id": "s7",
+   "x": 820,
+   "y": 40,
+   "width": 380,
+   "height": 70,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#ffc9c9",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "opacity": 100,
+   "strokeStyle": "solid",
+   "roundness": {
+    "type": 3
+   },
+   "boundElements": [
+    {
+     "id": "t8",
+     "type": "text"
+    }
+   ]
+  },
+  {
+   "type": "text",
+   "id": "t8",
+   "x": 825,
+   "y": 45,
+   "width": 370,
+   "height": 60,
+   "text": "speaker-identity leakage:\nJOSIE sometimes in a (male) user voice",
+   "originalText": "speaker-identity leakage:\nJOSIE sometimes in a (male) user voice",
+   "fontSize": 15,
+   "fontFamily": 1,
+   "strokeColor": "#1e1e1e",
+   "textAlign": "center",
+   "verticalAlign": "middle",
+   "containerId": "s7",
+   "autoResize": true
+  },
+  {
+   "type": "rectangle",
+   "id": "s9",
+   "x": 820,
+   "y": 130,
+   "width": 380,
+   "height": 70,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#ffc9c9",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "opacity": 100,
+   "strokeStyle": "solid",
+   "roundness": {
+    "type": 3
+   },
+   "boundElements": [
+    {
+     "id": "t10",
+     "type": "text"
+    }
+   ]
+  },
+  {
+   "type": "text",
+   "id": "t10",
+   "x": 825,
+   "y": 135,
+   "width": 370,
+   "height": 60,
+   "text": "barge-in imitation:\ntalks over the user",
+   "originalText": "barge-in imitation:\ntalks over the user",
+   "fontSize": 15,
+   "fontFamily": 1,
+   "strokeColor": "#1e1e1e",
+   "textAlign": "center",
+   "verticalAlign": "middle",
+   "containerId": "s9",
+   "autoResize": true
+  },
+  {
+   "type": "arrow",
+   "id": "a11",
+   "x": 750,
+   "y": 100,
+   "width": 70,
+   "height": 25,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     70,
+     -25
+    ]
+   ],
+   "endArrowhead": "arrow",
+   "startArrowhead": null,
+   "strokeColor": "#1e1e1e",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "strokeStyle": "solid"
+  },
+  {
+   "type": "arrow",
+   "id": "a12",
+   "x": 750,
+   "y": 140,
+   "width": 70,
+   "height": 25,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     70,
+     25
+    ]
+   ],
+   "endArrowhead": "arrow",
+   "startArrowhead": null,
+   "strokeColor": "#1e1e1e",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "strokeStyle": "solid"
+  },
+  {
+   "type": "rectangle",
+   "id": "s13",
+   "x": 20,
+   "y": 240,
+   "width": 1180,
+   "height": 70,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#fff3bf",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "opacity": 100,
+   "strokeStyle": "solid",
+   "roundness": {
+    "type": 3
+   },
+   "boundElements": [
+    {
+     "id": "t14",
+     "type": "text"
+    }
+   ]
+  },
+  {
+   "type": "text",
+   "id": "t14",
+   "x": 25,
+   "y": 245,
+   "width": 1170,
+   "height": 60,
+   "text": "self-play, 5 seeds x 30 s from a real opening: JOSIE side active 71%, other side 4% (per seed 0, 0, 14, 5, 0),\nboth 1%, silent 26%; caramel-1 reference for the other side: 32%. Fix: --no_swap (Fig. 7).",
+   "originalText": "self-play, 5 seeds x 30 s from a real opening: JOSIE side active 71%, other side 4% (per seed 0, 0, 14, 5, 0),\nboth 1%, silent 26%; caramel-1 reference for the other side: 32%. Fix: --no_swap (Fig. 7).",
+   "fontSize": 15,
+   "fontFamily": 1,
+   "strokeColor": "#1e1e1e",
+   "textAlign": "center",
+   "verticalAlign": "middle",
+   "containerId": "s13",
+   "autoResize": true
+  }
+ ],
+ "appState": {
+  "viewBackgroundColor": "#ffffff"
+ },
+ "files": {}
+}

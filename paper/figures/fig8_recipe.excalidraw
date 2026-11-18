@@ -1,0 +1,330 @@
+{
+ "type": "excalidraw",
+ "version": 2,
+ "source": "caramel-paper",
+ "elements": [
+  {
+   "type": "text",
+   "id": "t1",
+   "x": 20,
+   "y": 10,
+   "width": 780.0,
+   "height": 25.0,
+   "text": "Training recipe: caramel-1 (released) -> synthetic pretrain -> JOSIE fine-tune",
+   "originalText": "Training recipe: caramel-1 (released) -> synthetic pretrain -> JOSIE fine-tune",
+   "fontSize": 20,
+   "fontFamily": 1,
+   "strokeColor": "#1e1e1e",
+   "autoResize": true
+  },
+  {
+   "type": "rectangle",
+   "id": "s2",
+   "x": 20,
+   "y": 70,
+   "width": 250,
+   "height": 140,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#e9ecef",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "opacity": 100,
+   "strokeStyle": "solid",
+   "roundness": {
+    "type": 3
+   },
+   "boundElements": [
+    {
+     "id": "t3",
+     "type": "text"
+    }
+   ]
+  },
+  {
+   "type": "text",
+   "id": "t3",
+   "x": 25,
+   "y": 75,
+   "width": 240,
+   "height": 130,
+   "text": "caramel-1 (README)\n1. one-person speech, 27 min\n2. 5,743 h conv., 46 min\n3. keep going, 61 min\n11,555 h total",
+   "originalText": "caramel-1 (README)\n1. one-person speech, 27 min\n2. 5,743 h conv., 46 min\n3. keep going, 61 min\n11,555 h total",
+   "fontSize": 14,
+   "fontFamily": 1,
+   "strokeColor": "#1e1e1e",
+   "textAlign": "center",
+   "verticalAlign": "middle",
+   "containerId": "s2",
+   "autoResize": true
+  },
+  {
+   "type": "rectangle",
+   "id": "s4",
+   "x": 330,
+   "y": 70,
+   "width": 300,
+   "height": 140,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#d0bfff",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "opacity": 100,
+   "strokeStyle": "solid",
+   "roundness": {
+    "type": 3
+   },
+   "boundElements": [
+    {
+     "id": "t5",
+     "type": "text"
+    }
+   ]
+  },
+  {
+   "type": "text",
+   "id": "t5",
+   "x": 335,
+   "y": 75,
+   "width": 290,
+   "height": 130,
+   "text": "stage A: synthetic pretrain\nrandom voice on both sides\n(B never A's voice)\nboth speaker orders\nmix 0.7 real : 0.3 synthetic",
+   "originalText": "stage A: synthetic pretrain\nrandom voice on both sides\n(B never A's voice)\nboth speaker orders\nmix 0.7 real : 0.3 synthetic",
+   "fontSize": 14,
+   "fontFamily": 1,
+   "strokeColor": "#1e1e1e",
+   "textAlign": "center",
+   "verticalAlign": "middle",
+   "containerId": "s4",
+   "autoResize": true
+  },
+  {
+   "type": "rectangle",
+   "id": "s6",
+   "x": 690,
+   "y": 70,
+   "width": 300,
+   "height": 140,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#a5d8ff",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "opacity": 100,
+   "strokeStyle": "solid",
+   "roundness": {
+    "type": 3
+   },
+   "boundElements": [
+    {
+     "id": "t7",
+     "type": "text"
+    }
+   ]
+  },
+  {
+   "type": "text",
+   "id": "t7",
+   "x": 695,
+   "y": 75,
+   "width": 290,
+   "height": 130,
+   "text": "stage B: assistant fine-tune\nJOSIE = Zoey as A\nrandom user voice as B\n--no_swap: loss on A only\nlr 1e-4, 3 epochs",
+   "originalText": "stage B: assistant fine-tune\nJOSIE = Zoey as A\nrandom user voice as B\n--no_swap: loss on A only\nlr 1e-4, 3 epochs",
+   "fontSize": 14,
+   "fontFamily": 1,
+   "strokeColor": "#1e1e1e",
+   "textAlign": "center",
+   "verticalAlign": "middle",
+   "containerId": "s6",
+   "autoResize": true
+  },
+  {
+   "type": "rectangle",
+   "id": "s8",
+   "x": 1050,
+   "y": 95,
+   "width": 170,
+   "height": 90,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#b2f2bb",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "opacity": 100,
+   "strokeStyle": "solid",
+   "roundness": {
+    "type": 3
+   },
+   "boundElements": [
+    {
+     "id": "t9",
+     "type": "text"
+    }
+   ]
+  },
+  {
+   "type": "text",
+   "id": "t9",
+   "x": 1055,
+   "y": 100,
+   "width": 160,
+   "height": 80,
+   "text": "JOSIE\nfull-duplex\nassistant",
+   "originalText": "JOSIE\nfull-duplex\nassistant",
+   "fontSize": 16,
+   "fontFamily": 1,
+   "strokeColor": "#1e1e1e",
+   "textAlign": "center",
+   "verticalAlign": "middle",
+   "containerId": "s8",
+   "autoResize": true
+  },
+  {
+   "type": "arrow",
+   "id": "a10",
+   "x": 270,
+   "y": 140,
+   "width": 60,
+   "height": 0,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     60,
+     0
+    ]
+   ],
+   "endArrowhead": "arrow",
+   "startArrowhead": null,
+   "strokeColor": "#1e1e1e",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "strokeStyle": "solid"
+  },
+  {
+   "type": "text",
+   "id": "t11",
+   "x": 279.0,
+   "y": 116.0,
+   "width": 42.0,
+   "height": 17.5,
+   "text": "--init",
+   "originalText": "--init",
+   "fontSize": 14,
+   "fontFamily": 1,
+   "strokeColor": "#1e1e1e",
+   "autoResize": true
+  },
+  {
+   "type": "arrow",
+   "id": "a12",
+   "x": 630,
+   "y": 140,
+   "width": 60,
+   "height": 0,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     60,
+     0
+    ]
+   ],
+   "endArrowhead": "arrow",
+   "startArrowhead": null,
+   "strokeColor": "#1e1e1e",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "strokeStyle": "solid"
+  },
+  {
+   "type": "text",
+   "id": "t13",
+   "x": 639.0,
+   "y": 116.0,
+   "width": 42.0,
+   "height": 17.5,
+   "text": "--init",
+   "originalText": "--init",
+   "fontSize": 14,
+   "fontFamily": 1,
+   "strokeColor": "#1e1e1e",
+   "autoResize": true
+  },
+  {
+   "type": "arrow",
+   "id": "a14",
+   "x": 990,
+   "y": 140,
+   "width": 60,
+   "height": 0,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     60,
+     0
+    ]
+   ],
+   "endArrowhead": "arrow",
+   "startArrowhead": null,
+   "strokeColor": "#1e1e1e",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "strokeStyle": "solid"
+  },
+  {
+   "type": "rectangle",
+   "id": "s15",
+   "x": 330,
+   "y": 250,
+   "width": 660,
+   "height": 60,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#fff3bf",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "roughness": 1,
+   "opacity": 100,
+   "strokeStyle": "solid",
+   "roundness": {
+    "type": 3
+   },
+   "boundElements": [
+    {
+     "id": "t16",
+     "type": "text"
+    }
+   ]
+  },
+  {
+   "type": "text",
+   "id": "t16",
+   "x": 335,
+   "y": 255,
+   "width": 650,
+   "height": 50,
+   "text": "status: stage A data notebook (synthetic_pretrain.ipynb) exists; stage A not yet trained.\nRuns in this paper: caramel-1 -> stage B directly (swap and --no_swap).",
+   "originalText": "status: stage A data notebook (synthetic_pretrain.ipynb) exists; stage A not yet trained.\nRuns in this paper: caramel-1 -> stage B directly (swap and --no_swap).",
+   "fontSize": 14,
+   "fontFamily": 1,
+   "strokeColor": "#1e1e1e",
+   "textAlign": "center",
+   "verticalAlign": "middle",
+   "containerId": "s15",
+   "autoResize": true
+  }
+ ],
+ "appState": {
+  "viewBackgroundColor": "#ffffff"
+ },
+ "files": {}
+}

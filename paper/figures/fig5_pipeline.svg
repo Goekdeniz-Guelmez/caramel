@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1410" height="340" viewBox="0 0 1410 340" font-family="Helvetica, Arial, sans-serif"><rect width="100%" height="100%" fill="#ffffff"/><text x="20.0" y="27.0" font-size="20" text-anchor="start" font-weight="bold" fill="#1e1e1e">Synthetic full-duplex data pipeline (one chunk of conversations at a time)</text>
+<rect x="20" y="70" width="170" height="90" rx="8" fill="#e9ecef" stroke="none"/>
+<path d="M 19.2,69.3 L 189.1,69.8 L 190.7,160.2 L 20.7,159.7 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="105.0" y="111.1" font-size="15" text-anchor="middle" fill="#1e1e1e">seed prompt</text>
+<text x="105.0" y="129.4" font-size="15" text-anchor="middle" fill="#1e1e1e">UltraFeedback</text>
+<rect x="220" y="70" width="170" height="90" rx="8" fill="#ffd8a8" stroke="none"/>
+<path d="M 221.0,68.9 L 389.1,69.1 L 388.9,159.5 L 221.1,159.4 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="305.0" y="102.0" font-size="15" text-anchor="middle" fill="#1e1e1e">teacher LLM</text>
+<text x="305.0" y="120.2" font-size="15" text-anchor="middle" fill="#1e1e1e">deepseek-v4.1-flash</text>
+<text x="305.0" y="138.6" font-size="15" text-anchor="middle" fill="#1e1e1e">(bonsai-2:27b)</text>
+<path d="M 190,115.0 L 220,115.0" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 210.0,119.5 L 220,115.0 L 210.0,110.5" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<rect x="420" y="70" width="170" height="90" rx="8" fill="#b2f2bb" stroke="none"/>
+<path d="M 419.0,70.3 L 589.5,70.9 L 588.8,160.3 L 420.7,158.8 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="505.0" y="102.0" font-size="15" text-anchor="middle" fill="#1e1e1e">Phonon TTS</text>
+<text x="505.0" y="120.2" font-size="15" text-anchor="middle" fill="#1e1e1e">JOSIE = Zoey</text>
+<text x="505.0" y="138.6" font-size="15" text-anchor="middle" fill="#1e1e1e">user: 1 of 25</text>
+<path d="M 390,115.0 L 420,115.0" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 410.0,119.5 L 420,115.0 L 410.0,110.5" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<rect x="620" y="70" width="170" height="90" rx="8" fill="#ffc9c9" stroke="none"/>
+<path d="M 620.1,70.6 L 791.2,69.9 L 790.6,159.1 L 620.6,160.7 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="705.0" y="102.0" font-size="15" text-anchor="middle" fill="#1e1e1e">forced aligner</text>
+<text x="705.0" y="120.2" font-size="15" text-anchor="middle" fill="#1e1e1e">word times</text>
+<text x="705.0" y="138.6" font-size="15" text-anchor="middle" fill="#1e1e1e">match &gt;= 0.8</text>
+<path d="M 590,115.0 L 620,115.0" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 610.0,119.5 L 620,115.0 L 610.0,110.5" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<rect x="820" y="70" width="170" height="90" rx="8" fill="#d0bfff" stroke="none"/>
+<path d="M 820.9,71.2 L 990.7,71.1 L 989.4,159.5 L 819.5,159.0 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="905.0" y="102.0" font-size="15" text-anchor="middle" fill="#1e1e1e">scene builder</text>
+<text x="905.0" y="120.2" font-size="15" text-anchor="middle" fill="#1e1e1e">barge-in, holds,</text>
+<text x="905.0" y="138.6" font-size="15" text-anchor="middle" fill="#1e1e1e">backchannels</text>
+<path d="M 790,115.0 L 820,115.0" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 810.0,119.5 L 820,115.0 L 810.0,110.5" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<rect x="1020" y="70" width="170" height="90" rx="8" fill="#c3fae8" stroke="none"/>
+<path d="M 1020.4,70.4 L 1190.0,70.7 L 1190.9,160.2 L 1020.7,160.5 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="1105.0" y="102.0" font-size="15" text-anchor="middle" fill="#1e1e1e">Mimi encoder</text>
+<text x="1105.0" y="120.2" font-size="15" text-anchor="middle" fill="#1e1e1e">2 x 8 tokens</text>
+<text x="1105.0" y="138.6" font-size="15" text-anchor="middle" fill="#1e1e1e">12.5 fps</text>
+<path d="M 990,115.0 L 1020,115.0" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 1010.0,119.5 L 1020,115.0 L 1010.0,110.5" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<rect x="1220" y="70" width="170" height="90" rx="8" fill="#a5d8ff" stroke="none"/>
+<path d="M 1220.2,68.9 L 1388.8,69.7 L 1389.6,159.9 L 1221.0,159.1 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="1305.0" y="102.0" font-size="15" text-anchor="middle" fill="#1e1e1e">HF upload</text>
+<text x="1305.0" y="120.2" font-size="15" text-anchor="middle" fill="#1e1e1e">parquet shard</text>
+<text x="1305.0" y="138.6" font-size="15" text-anchor="middle" fill="#1e1e1e">(audio deleted)</text>
+<path d="M 1190,115.0 L 1220,115.0" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 1210.0,119.5 L 1220,115.0 L 1210.0,110.5" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 705,160 L 705,230" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-dasharray="7 5" stroke-linejoin="round"/>
+<path d="M 700.5,220.0 L 705,230 L 709.5,220.0" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="760.0" y="212.9" font-size="14" text-anchor="middle" fill="#1e1e1e">match &lt; 0.8</text>
+<rect x="560" y="230" width="260" height="60" rx="8" fill="#ffc9c9" stroke="none"/>
+<path d="M 560.6,229.7 L 820.4,229.0 L 819.3,290.5 L 559.4,289.3 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="690.0" y="256.4" font-size="14" text-anchor="middle" fill="#1e1e1e">dropped (~25% of conversations;</text>
+<text x="690.0" y="273.4" font-size="14" text-anchor="middle" fill="#1e1e1e">reason in meta.json[skipped])</text>
+<rect x="20" y="230" width="500" height="90" rx="8" fill="#fff3bf" stroke="none"/>
+<path d="M 21.0,231.0 L 520.9,231.0 L 520.2,319.1 L 20.0,319.2 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="270.0" y="262.8" font-size="14" text-anchor="middle" fill="#1e1e1e">turn loop: JOSIE replies (system prompt: spoken, no markdown);</text>
+<text x="270.0" y="279.9" font-size="14" text-anchor="middle" fill="#1e1e1e">follow-up model writes the next user turn;</text>
+<text x="270.0" y="297.0" font-size="14" text-anchor="middle" fill="#1e1e1e">max turns 32 / 4 / 8 by prompt range</text>
+<rect x="860" y="230" width="520" height="90" rx="8" fill="#a5d8ff" stroke="none"/>
+<path d="M 860.9,229.7 L 1379.2,230.6 L 1379.6,319.0 L 860.3,320.2 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="1120.0" y="262.8" font-size="14" text-anchor="middle" fill="#1e1e1e">train.py --data hf://... streams shards;</text>
+<text x="1120.0" y="279.9" font-size="14" text-anchor="middle" fill="#1e1e1e">8 workers: ~9-10 h of audio per wall-clock hour</text>
+<text x="1120.0" y="297.0" font-size="14" text-anchor="middle" fill="#1e1e1e">JOSIE set: 1,431 conv., 137.1 h train + 14.2 h val.</text></svg>

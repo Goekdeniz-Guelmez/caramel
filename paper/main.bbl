@@ -1,0 +1,200 @@
+\begin{thebibliography}{29}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Agrawal et~al.(2025)]{agrawal2025seamless}
+Vasu Agrawal et~al.
+\newblock Seamless interaction: Dyadic audiovisual motion modeling and
+  large-scale dataset.
+\newblock \emph{arXiv preprint arXiv:2506.22554}, 2025.
+
+\bibitem[{Block, Inc.}()]{dessa}
+{Block, Inc.}
+\newblock Dessa.
+\newblock \url{https://block.xyz/dessa}.
+\newblock Accessed 2026-11.
+
+\bibitem[Borsos et~al.(2023)]{borsos2023audiolm}
+Zal{\'a}n Borsos et~al.
+\newblock {AudioLM}: a language modeling approach to audio generation.
+\newblock \emph{IEEE/ACM Transactions on Audio, Speech, and Language
+  Processing}, 2023.
+\newblock arXiv:2209.03143.
+
+\bibitem[Copet et~al.(2023)Copet, Kreuk, Gat, Remez, Kant, Synnaeve, Adi, and
+  D{\'e}fossez]{copet2023musicgen}
+Jade Copet, Felix Kreuk, Itai Gat, Tal Remez, David Kant, Gabriel Synnaeve,
+  Yossi Adi, and Alexandre D{\'e}fossez.
+\newblock Simple and controllable music generation.
+\newblock In \emph{Advances in Neural Information Processing Systems}, 2023.
+\newblock arXiv:2306.05284.
+
+\bibitem[Cui et~al.(2023)]{cui2023ultrafeedback}
+Ganqu Cui et~al.
+\newblock {UltraFeedback}: Boosting language models with scaled {AI} feedback.
+\newblock \emph{arXiv preprint arXiv:2310.01377}, 2023.
+
+\bibitem[D{\'e}fossez et~al.(2022)D{\'e}fossez, Copet, Synnaeve, and
+  Adi]{defossez2022encodec}
+Alexandre D{\'e}fossez, Jade Copet, Gabriel Synnaeve, and Yossi Adi.
+\newblock High fidelity neural audio compression.
+\newblock \emph{arXiv preprint arXiv:2210.13438}, 2022.
+
+\bibitem[D{\'e}fossez et~al.(2024)D{\'e}fossez, Mazar{\'e}, Orsini, Royer,
+  P{\'e}rez, J{\'e}gou, Grave, and Zeghidour]{defossez2024moshi}
+Alexandre D{\'e}fossez, Laurent Mazar{\'e}, Manu Orsini, Am{\'e}lie Royer,
+  Patrick P{\'e}rez, Herv{\'e} J{\'e}gou, Edouard Grave, and Neil Zeghidour.
+\newblock Moshi: a speech-text foundation model for real-time dialogue.
+\newblock \emph{arXiv preprint arXiv:2410.00037}, 2024.
+
+\bibitem[Desplanques et~al.(2020)Desplanques, Thienpondt, and
+  Demuynck]{desplanques2020ecapa}
+Brecht Desplanques, Jenthe Thienpondt, and Kris Demuynck.
+\newblock {ECAPA-TDNN}: Emphasized channel attention, propagation and
+  aggregation in {TDNN} based speaker verification.
+\newblock In \emph{Interspeech}, 2020.
+\newblock arXiv:2005.07143.
+
+\bibitem[Fang et~al.(2024)]{fang2024llamaomni}
+Qingkai Fang et~al.
+\newblock {LLaMA-Omni}: Seamless speech interaction with large language models.
+\newblock \emph{arXiv preprint arXiv:2409.06666}, 2024.
+
+\bibitem[{Gradium}()]{phonon}
+{Gradium}.
+\newblock phonon-40m-multilingual.
+\newblock \url{https://huggingface.co/gradium/phonon-40m-multilingual}.
+\newblock Text-to-speech model, CC BY-NC 4.0.
+
+\bibitem[G{\"u}lmez(2026)]{josiedata}
+G{\"o}kdeniz G{\"u}lmez.
+\newblock {JOSIE} live synthetic conversations ({Mimi} tokens).
+\newblock
+  \url{https://huggingface.co/datasets/Goekdeniz-Guelmez/josie-live-synthetic},
+  2026.
+
+\bibitem[Kahn et~al.(2020)]{kahn2020librilight}
+Jacob Kahn et~al.
+\newblock {Libri-Light}: A benchmark for {ASR} with limited or no supervision.
+\newblock In \emph{ICASSP}, 2020.
+\newblock arXiv:1912.07875.
+
+\bibitem[Lakhotia et~al.(2021)]{lakhotia2021gslm}
+Kushal Lakhotia et~al.
+\newblock Generative spoken language modeling from raw audio.
+\newblock \emph{Transactions of the Association for Computational Linguistics},
+  9, 2021.
+\newblock arXiv:2102.01192.
+
+\bibitem[Loshchilov and Hutter(2017)]{loshchilov2017sgdr}
+Ilya Loshchilov and Frank Hutter.
+\newblock {SGDR}: Stochastic gradient descent with warm restarts.
+\newblock In \emph{International Conference on Learning Representations}, 2017.
+\newblock arXiv:1608.03983.
+
+\bibitem[Loshchilov and Hutter(2019)]{loshchilov2019adamw}
+Ilya Loshchilov and Frank Hutter.
+\newblock Decoupled weight decay regularization.
+\newblock In \emph{International Conference on Learning Representations}, 2019.
+\newblock arXiv:1711.05101.
+
+\bibitem[{naklecha}(2026)]{caramel1}
+{naklecha}.
+\newblock caramel-1: a conversation model trained only on speech.
+\newblock \url{https://huggingface.co/naklecha/caramel-1}, 2026.
+\newblock Model card and code release (README of this repository).
+
+\bibitem[Nguyen et~al.(2023)Nguyen, Kharitonov, Copet, Adi, Hsu, Elkahky,
+  Tomasello, Algayres, Sagot, Mohamed, and Dupoux]{nguyen2023dgslm}
+Tu~Anh Nguyen, Eugene Kharitonov, Jade Copet, Yossi Adi, Wei-Ning Hsu, Ali
+  Elkahky, Paden Tomasello, Robin Algayres, Beno{\^\i}t Sagot, Abdelrahman
+  Mohamed, and Emmanuel Dupoux.
+\newblock Generative spoken dialogue language modeling.
+\newblock \emph{Transactions of the Association for Computational Linguistics},
+  11:\penalty0 250--266, 2023.
+\newblock arXiv:2203.16502.
+
+\bibitem[Rafailov et~al.(2023)Rafailov, Sharma, Mitchell, Ermon, Manning, and
+  Finn]{rafailov2023dpo}
+Rafael Rafailov, Archit Sharma, Eric Mitchell, Stefano Ermon, Christopher~D.
+  Manning, and Chelsea Finn.
+\newblock Direct preference optimization: Your language model is secretly a
+  reward model.
+\newblock In \emph{Advances in Neural Information Processing Systems}, 2023.
+\newblock arXiv:2305.18290.
+
+\bibitem[Saeki et~al.(2022)Saeki, Xin, Nakata, Koriyama, Takamichi, and
+  Saruwatari]{saeki2022utmos}
+Takaaki Saeki, Detai Xin, Wataru Nakata, Tomoki Koriyama, Shinnosuke Takamichi,
+  and Hiroshi Saruwatari.
+\newblock {UTMOS}: {UTokyo-SaruLab} system for {VoiceMOS} challenge 2022.
+\newblock In \emph{Interspeech}, 2022.
+\newblock arXiv:2204.02152.
+
+\bibitem[Schulman et~al.(2017)Schulman, Wolski, Dhariwal, Radford, and
+  Klimov]{schulman2017ppo}
+John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, and Oleg Klimov.
+\newblock Proximal policy optimization algorithms.
+\newblock \emph{arXiv preprint arXiv:1707.06347}, 2017.
+
+\bibitem[Shao et~al.(2024)]{shao2024deepseekmath}
+Zhihong Shao et~al.
+\newblock {DeepSeekMath}: Pushing the limits of mathematical reasoning in open
+  language models.
+\newblock \emph{arXiv preprint arXiv:2402.03300}, 2024.
+\newblock Introduces GRPO.
+
+\bibitem[Shazeer(2020)]{shazeer2020glu}
+Noam Shazeer.
+\newblock {GLU} variants improve transformer.
+\newblock \emph{arXiv preprint arXiv:2002.05202}, 2020.
+
+\bibitem[Su et~al.(2021)Su, Lu, Pan, Murtadha, Wen, and Liu]{su2021roformer}
+Jianlin Su, Yu~Lu, Shengfeng Pan, Ahmed Murtadha, Bo~Wen, and Yunfeng Liu.
+\newblock {RoFormer}: Enhanced transformer with rotary position embedding.
+\newblock \emph{arXiv preprint arXiv:2104.09864}, 2021.
+
+\bibitem[Vaswani et~al.(2017)Vaswani, Shazeer, Parmar, Uszkoreit, Jones, Gomez,
+  Kaiser, and Polosukhin]{vaswani2017attention}
+Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones,
+  Aidan~N. Gomez, {\L}ukasz Kaiser, and Illia Polosukhin.
+\newblock Attention is all you need.
+\newblock In \emph{Advances in Neural Information Processing Systems}, 2017.
+
+\bibitem[Veluri et~al.(2024)Veluri, Peloquin, Yu, Gong, and
+  Gollakota]{veluri2024syncllm}
+Bandhav Veluri, Benjamin~N. Peloquin, Bokai Yu, Hongyu Gong, and Shyamnath
+  Gollakota.
+\newblock Beyond turn-based interfaces: Synchronous {LLMs} as full-duplex
+  dialogue agents.
+\newblock \emph{arXiv preprint arXiv:2409.15594}, 2024.
+
+\bibitem[Xie and Wu(2024)]{xie2024miniomni}
+Zhifei Xie and Changqiao Wu.
+\newblock {Mini-Omni}: Language models can hear, talk while thinking in
+  streaming.
+\newblock \emph{arXiv preprint arXiv:2408.16725}, 2024.
+
+\bibitem[Zeghidour et~al.(2021)Zeghidour, Luebs, Omran, Skoglund, and
+  Tagliasacchi]{zeghidour2021soundstream}
+Neil Zeghidour, Alejandro Luebs, Ahmed Omran, Jan Skoglund, and Marco
+  Tagliasacchi.
+\newblock {SoundStream}: An end-to-end neural audio codec.
+\newblock \emph{arXiv preprint arXiv:2107.03312}, 2021.
+
+\bibitem[Zhang and Sennrich(2019)]{zhang2019rmsnorm}
+Biao Zhang and Rico Sennrich.
+\newblock Root mean square layer normalization.
+\newblock In \emph{Advances in Neural Information Processing Systems}, 2019.
+\newblock arXiv:1910.07467.
+
+\bibitem[Zhang et~al.(2023)]{zhang2023speechgpt}
+Dong Zhang et~al.
+\newblock {SpeechGPT}: Empowering large language models with intrinsic
+  cross-modal conversational abilities.
+\newblock \emph{arXiv preprint arXiv:2305.11000}, 2023.
+
+\end{thebibliography}

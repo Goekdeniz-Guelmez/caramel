@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1340" height="360" viewBox="0 0 1340 360" font-family="Helvetica, Arial, sans-serif"><rect width="100%" height="100%" fill="#ffffff"/><text x="20.0" y="28.7" font-size="22" text-anchor="start" font-weight="bold" fill="#1e1e1e">caramel: audio in, audio out, every 80 ms</text>
+<rect x="20" y="70" width="170" height="60" rx="8" fill="#ffd8a8" stroke="none"/>
+<path d="M 19.5,69.4 L 189.8,70.4 L 189.3,130.9 L 20.6,130.3 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="105.0" y="95.8" font-size="16" text-anchor="middle" fill="#1e1e1e">user audio</text>
+<text x="105.0" y="115.4" font-size="16" text-anchor="middle" fill="#1e1e1e">(24 kHz)</text>
+<rect x="20" y="200" width="170" height="60" rx="8" fill="#b2f2bb" stroke="none"/>
+<path d="M 21.2,199.4 L 189.3,200.4 L 189.7,260.5 L 19.9,261.0 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="105.0" y="225.8" font-size="16" text-anchor="middle" fill="#1e1e1e">own audio</text>
+<text x="105.0" y="245.4" font-size="16" text-anchor="middle" fill="#1e1e1e">(fed back)</text>
+<rect x="250" y="130" width="150" height="70" rx="8" fill="#c3fae8" stroke="none"/>
+<path d="M 250.1,129.3 L 400.5,129.5 L 398.9,199.0 L 250.2,198.9 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="325.0" y="160.8" font-size="16" text-anchor="middle" fill="#1e1e1e">Mimi encoder</text>
+<text x="325.0" y="180.4" font-size="16" text-anchor="middle" fill="#1e1e1e">8 codebooks</text>
+<path d="M 190,100 L 250,150" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 239.4,147.0 L 250,150 L 245.2,140.1" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 190,230 L 250,180" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 245.2,189.9 L 250,180 L 239.4,183.0" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<rect x="460" y="120" width="170" height="90" rx="8" fill="#fff3bf" stroke="none"/>
+<path d="M 460.6,119.9 L 629.5,121.1 L 629.4,210.9 L 460.4,211.2 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="545.0" y="151.9" font-size="15" text-anchor="middle" fill="#1e1e1e">16 tokens / frame</text>
+<text x="545.0" y="170.2" font-size="15" text-anchor="middle" fill="#1e1e1e">A: own (0-7)</text>
+<text x="545.0" y="188.5" font-size="15" text-anchor="middle" fill="#1e1e1e">B: other (8-15)</text>
+<path d="M 400,165 L 460,165" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 450.0,169.5 L 460,165 L 450.0,160.5" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<rect x="690" y="60" width="220" height="80" rx="8" fill="#a5d8ff" stroke="none"/>
+<path d="M 689.7,59.5 L 910.4,60.4 L 909.6,140.0 L 689.6,140.4 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="800.0" y="95.8" font-size="16" text-anchor="middle" fill="#1e1e1e">temporal transformer</text>
+<text x="800.0" y="115.4" font-size="16" text-anchor="middle" fill="#1e1e1e">16 layers, d = 1024</text>
+<rect x="690" y="190" width="220" height="80" rx="8" fill="#d0bfff" stroke="none"/>
+<path d="M 689.1,190.5 L 910.2,189.0 L 911.1,270.8 L 689.5,270.4 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="800.0" y="225.8" font-size="16" text-anchor="middle" fill="#1e1e1e">depformer</text>
+<text x="800.0" y="245.4" font-size="16" text-anchor="middle" fill="#1e1e1e">6 layers, d = 512</text>
+<path d="M 630,150 L 690,100" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 685.2,109.9 L 690,100 L 679.4,103.0" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 800,140 L 800,190" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 795.5,180.0 L 800,190 L 804.5,180.0" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="822.0" y="166.9" font-size="14" text-anchor="middle" fill="#1e1e1e">h_t</text>
+<rect x="970" y="190" width="150" height="80" rx="8" fill="#fff3bf" stroke="none"/>
+<path d="M 970.5,190.4 L 1119.8,189.1 L 1118.8,269.7 L 970.2,270.6 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="1045.0" y="225.8" font-size="16" text-anchor="middle" fill="#1e1e1e">8 new tokens</text>
+<text x="1045.0" y="245.4" font-size="16" text-anchor="middle" fill="#1e1e1e">for speaker A</text>
+<path d="M 910,230 L 970,230" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 960.0,234.5 L 970,230 L 960.0,225.5" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<rect x="970" y="60" width="150" height="80" rx="8" fill="#c3fae8" stroke="none"/>
+<path d="M 970.7,59.5 L 1119.7,59.2 L 1121.1,139.4 L 969.0,140.9 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="1045.0" y="105.6" font-size="16" text-anchor="middle" fill="#1e1e1e">Mimi decoder</text>
+<path d="M 1045,190 L 1045,140" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 1049.5,150.0 L 1045,140 L 1040.5,150.0" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<rect x="1170" y="60" width="150" height="80" rx="8" fill="#b2f2bb" stroke="none"/>
+<path d="M 1169.3,59.0 L 1319.7,59.8 L 1319.9,139.5 L 1170.4,140.2 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="1245.0" y="105.6" font-size="16" text-anchor="middle" fill="#1e1e1e">speech out</text>
+<path d="M 1120,100 L 1170,100" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 1160.0,104.5 L 1170,100 L 1160.0,95.5" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 1045,270 L 1045,310 L 105,310 L 105,260" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-dasharray="7 5" stroke-linejoin="round"/>
+<path d="M 109.5,270.0 L 105,260 L 100.5,270.0" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="575.0" y="333.9" font-size="14" text-anchor="middle" fill="#1e1e1e">sampled tokens become next frame's input (no VAD, no turn rule)</text></svg>

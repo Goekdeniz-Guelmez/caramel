@@ -55,39 +55,62 @@ class ChatTeacher:
         extra = {"response_format": {"type": "json_object"}} if json_mode else {}
         from openai import APITimeoutError
 
-        # Bound retries here too: notebook kernels can retain older clients.
-        client = self.client.with_options(timeout=120.0, max_retries=0)
-        try:
-            response = client.chat.completions.create(
-                model=model, messages=messages, seed=seed, **extra
-            )
-        except APITimeoutError as exc:
-            raise TeacherTimeoutError(
-                f"Teacher {model!r} timed out after 120 seconds"
-            ) from exc
+        # Bound retries here too: notebook kernels can retain older clients. Keep the client's own timeout.
+        timeout = getattr(self.client, "timeout", None)
+        timeout = timeout if isinstance(timeout, (int, float)) else 120.0
+        client = self.client.with_options(timeout=timeout, max_retries=0)
+        from openai import APIConnectionError, InternalServerError, RateLimitError
+        import time
+
+        # Cloud endpoints rate-limit (429) and have transient 5xx / connection errors: back off 30 s, 60 s, ... up to
+        # 5 min; after 8 attempts this conversation is skipped (logged), the run goes on.
+        for attempt in range(8):
+            try:
+                response = client.chat.completions.create(
+                    model=model, messages=messages, seed=seed, **extra
+                )
+                break
+            except (RateLimitError, InternalServerError, APIConnectionError) as exc:
+                if isinstance(exc, APITimeoutError):   # APITimeoutError subclasses APIConnectionError
+                    raise TeacherTimeoutError(f"Teacher {model!r} timed out after {timeout:g} seconds") from exc
+                if attempt == 7:
+                    raise TeacherTimeoutError(f"Teacher {model!r} failed 8 times: {type(exc).__name__}: {exc}") from exc
+                time.sleep(min(30 * 2 ** attempt, 300))
+            except APITimeoutError as exc:
+                raise TeacherTimeoutError(
+                    f"Teacher {model!r} timed out after {timeout:g} seconds"
+                ) from exc
         return response.choices[0].message.content or ""
 
     def generate(self, messages: list[dict[str, str]], *, seed: int) -> str:
-        content = self._complete(self.assistant_model, messages, seed, False).strip()
-        if not content:
-            raise ValueError("teacher returned an empty assistant response")
-        return content
+        for attempt in range(2):   # a bad reply skips this conversation (logged), it must not stop the whole run
+            content = self._complete(self.assistant_model, messages, seed + attempt, False).strip()
+            if content:
+                return content
+        raise TeacherTimeoutError(f"teacher {self.assistant_model!r} returned an empty assistant response twice")
 
     def followup(self, seed_prompt: str, history: list[dict[str, str]], *, seed: int) -> str:
         chat = "\n".join(
             f"{'User' if m['role'] == 'user' else 'Assistant'}: {m['content']}"
             for m in history if m.get("role") in {"user", "assistant"}
         )
-        raw = self._complete(self.followup_model,
-                             [{"role": "user", "content": self.followup_prompt.format(chat_history=chat)}],
-                             seed, True)
-        match = re.search(r"[\[{].*[\]}]", raw, re.S)
-        parsed = json.loads(match.group(0) if match else "{}")
-        options = parsed if isinstance(parsed, list) else parsed.get("follow_ups")
-        options = [o.strip() for o in options or [] if isinstance(o, str) and o.strip()]
-        if not options:
-            raise ValueError("teacher returned no follow-up prompts")
-        return random.Random(seed).choice(options)
+        problem = ""
+        for attempt in range(2):   # malformed JSON or no options: retry once, then skip this conversation (logged)
+            raw = self._complete(self.followup_model,
+                                 [{"role": "user", "content": self.followup_prompt.format(chat_history=chat)}],
+                                 seed + attempt, True)
+            match = re.search(r"[\[{].*[\]}]", raw, re.S)
+            try:
+                parsed = json.loads(match.group(0) if match else "{}")
+            except json.JSONDecodeError as exc:
+                problem = f"malformed follow-up JSON ({exc})"
+                continue
+            options = parsed if isinstance(parsed, list) else parsed.get("follow_ups") if isinstance(parsed, dict) else None
+            options = [o.strip() for o in options or [] if isinstance(o, str) and o.strip()]
+            if options:
+                return random.Random(seed).choice(options)
+            problem = "no follow-up prompts"
+        raise TeacherTimeoutError(f"teacher {self.followup_model!r} gave {problem} twice")
 
 
 class MLXTeacher(ChatTeacher):

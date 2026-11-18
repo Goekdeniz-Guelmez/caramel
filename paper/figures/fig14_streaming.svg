@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="470" viewBox="0 0 1120 470" font-family="Helvetica, Arial, sans-serif"><rect width="100%" height="100%" fill="#ffffff"/><text x="20.0" y="27.0" font-size="20" text-anchor="start" font-weight="bold" fill="#1e1e1e">Streaming inference: one 80 ms step with KV caches (live.py / generate.py)</text>
+<rect x="20" y="60" width="200" height="70" rx="8" fill="#ffd8a8" stroke="none"/>
+<path d="M 20.8,59.9 L 220.9,60.5 L 219.3,130.3 L 19.7,130.2 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="120.0" y="91.1" font-size="15" text-anchor="middle" fill="#1e1e1e">mic block</text>
+<text x="120.0" y="109.4" font-size="15" text-anchor="middle" fill="#1e1e1e">1920 samples</text>
+<rect x="260" y="60" width="200" height="70" rx="8" fill="#c3fae8" stroke="none"/>
+<path d="M 261.2,60.7 L 460.3,60.0 L 460.8,129.4 L 259.6,131.1 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="360.0" y="91.1" font-size="15" text-anchor="middle" fill="#1e1e1e">Mimi encode_step</text>
+<text x="360.0" y="109.4" font-size="15" text-anchor="middle" fill="#1e1e1e">-&gt; 8 codes (user)</text>
+<rect x="500" y="60" width="230" height="70" rx="8" fill="#fff3bf" stroke="none"/>
+<path d="M 500.6,60.6 L 730.6,59.4 L 729.2,129.0 L 500.5,129.2 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="615.0" y="91.1" font-size="15" text-anchor="middle" fill="#1e1e1e">input [me | other]</text>
+<text x="615.0" y="109.4" font-size="15" text-anchor="middle" fill="#1e1e1e">16 delayed tokens</text>
+<rect x="770" y="60" width="280" height="70" rx="8" fill="#a5d8ff" stroke="none"/>
+<path d="M 768.8,61.1 L 1050.1,59.7 L 1049.6,130.7 L 769.8,129.5 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="910.0" y="91.1" font-size="15" text-anchor="middle" fill="#1e1e1e">temporal step at pos</text>
+<text x="910.0" y="109.4" font-size="15" text-anchor="middle" fill="#1e1e1e">write K,V into cache[pos]</text>
+<path d="M 220,95 L 260,95" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 250.0,99.5 L 260,95 L 250.0,90.5" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 460,95 L 500,95" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 490.0,99.5 L 500,95 L 490.0,90.5" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 730,95 L 770,95" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 760.0,99.5 L 770,95 L 760.0,90.5" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<rect x="770" y="180" width="280" height="70" rx="8" fill="#d0bfff" stroke="none"/>
+<path d="M 771.1,179.6 L 1050.5,180.6 L 1048.8,250.1 L 770.6,250.5 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="910.0" y="202.8" font-size="14" text-anchor="middle" fill="#1e1e1e">compiled depth pass</text>
+<text x="910.0" y="219.9" font-size="14" text-anchor="middle" fill="#1e1e1e">8 codebooks x 6 layers</text>
+<text x="910.0" y="237.0" font-size="14" text-anchor="middle" fill="#1e1e1e">+ top-k sampling</text>
+<path d="M 910,130 L 910,180" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 905.5,170.0 L 910,180 L 914.5,170.0" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<rect x="500" y="180" width="230" height="70" rx="8" fill="#c3fae8" stroke="none"/>
+<path d="M 499.8,178.8 L 730.7,179.4 L 729.0,249.4 L 500.9,250.4 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="615.0" y="211.4" font-size="14" text-anchor="middle" fill="#1e1e1e">Mimi decode_step</text>
+<text x="615.0" y="228.4" font-size="14" text-anchor="middle" fill="#1e1e1e">frame t-1 -&gt; 1920 samples</text>
+<path d="M 770,215 L 730,215" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 740.0,210.5 L 730,215 L 740.0,219.5" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<rect x="260" y="180" width="200" height="70" rx="8" fill="#b2f2bb" stroke="none"/>
+<path d="M 259.5,179.6 L 459.4,180.5 L 460.1,249.8 L 259.7,249.9 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="360.0" y="211.1" font-size="15" text-anchor="middle" fill="#1e1e1e">speaker</text>
+<text x="360.0" y="229.4" font-size="15" text-anchor="middle" fill="#1e1e1e">(80 ms later)</text>
+<path d="M 500,215 L 460,215" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 470.0,210.5 L 460,215 L 470.0,219.5" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 1050,215 L 1100,215 L 1100,300 L 480,300 L 480,120 L 500,120" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-dasharray="7 5" stroke-linejoin="round"/>
+<path d="M 490.0,124.5 L 500,120 L 490.0,115.5" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="790.0" y="321.9" font-size="14" text-anchor="middle" fill="#1e1e1e">sampled tokens become 'me' input of the next step (stay on GPU)</text>
+<rect x="20" y="360" width="1080" height="90" rx="8" fill="#e9ecef" stroke="none"/>
+<path d="M 20.3,359.1 L 1100.9,360.3 L 1101.0,450.9 L 21.1,449.9 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="560.0" y="392.8" font-size="14" text-anchor="middle" fill="#1e1e1e">KV cache: 16 layers x [B, 16 heads, Tmax, 64] preallocated, Tmax &lt;= 3000 frames (240 s); attention reads 0..pos.</text>
+<text x="560.0" y="409.9" font-size="14" text-anchor="middle" fill="#1e1e1e">Budget: &lt; 80 ms per step. Stale mic blocks are dropped rather than drifting. mx.async_eval overlaps frame t+1 with t.</text>
+<text x="560.0" y="427.0" font-size="14" text-anchor="middle" fill="#1e1e1e">Weight-only 8-bit / 4-bit quantisation for bandwidth-bound decoding.</text></svg>

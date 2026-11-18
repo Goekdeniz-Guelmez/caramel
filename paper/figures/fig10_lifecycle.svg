@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1210" height="368" viewBox="0 0 1210 368" font-family="Helvetica, Arial, sans-serif"><rect width="100%" height="100%" fill="#ffffff"/><text x="20.0" y="27.0" font-size="20" text-anchor="start" font-weight="bold" fill="#1e1e1e">caramel lifecycle: from scraped audio to a duplex assistant</text>
+<rect x="20" y="60" width="175" height="95" rx="8" fill="#e9ecef" stroke="none"/>
+<path d="M 18.8,59.2 L 196.1,59.3 L 195.0,155.3 L 20.3,154.6 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="107.5" y="95.3" font-size="14" text-anchor="middle" fill="#1e1e1e">scrape</text>
+<text x="107.5" y="112.4" font-size="14" text-anchor="middle" fill="#1e1e1e">66,824 feeds</text>
+<text x="107.5" y="129.5" font-size="14" text-anchor="middle" fill="#1e1e1e">3,216 CC channels</text>
+<rect x="235" y="60" width="175" height="95" rx="8" fill="#fff3bf" stroke="none"/>
+<path d="M 235.7,59.4 L 411.0,58.9 L 408.8,154.6 L 235.6,154.6 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="322.5" y="95.3" font-size="14" text-anchor="middle" fill="#1e1e1e">closeness filter</text>
+<text x="322.5" y="112.4" font-size="14" text-anchor="middle" fill="#1e1e1e">13 statistics</text>
+<text x="322.5" y="129.5" font-size="14" text-anchor="middle" fill="#1e1e1e">target bands</text>
+<path d="M 195,107 L 235,107" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 225.0,111.5 L 235,107 L 225.0,102.5" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<rect x="450" y="60" width="175" height="95" rx="8" fill="#ffd8a8" stroke="none"/>
+<path d="M 449.1,59.8 L 625.6,59.4 L 625.6,155.1 L 449.3,155.2 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="537.5" y="95.3" font-size="14" text-anchor="middle" fill="#1e1e1e">speaker separation</text>
+<text x="537.5" y="112.4" font-size="14" text-anchor="middle" fill="#1e1e1e">one track</text>
+<text x="537.5" y="129.5" font-size="14" text-anchor="middle" fill="#1e1e1e">per speaker</text>
+<path d="M 410,107 L 450,107" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 440.0,111.5 L 450,107 L 440.0,102.5" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<rect x="665" y="60" width="175" height="95" rx="8" fill="#c3fae8" stroke="none"/>
+<path d="M 665.3,59.7 L 840.1,60.2 L 839.9,155.9 L 664.6,154.4 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="752.5" y="95.3" font-size="14" text-anchor="middle" fill="#1e1e1e">Mimi tokens</text>
+<text x="752.5" y="112.4" font-size="14" text-anchor="middle" fill="#1e1e1e">prepare.py</text>
+<text x="752.5" y="129.5" font-size="14" text-anchor="middle" fill="#1e1e1e">11,555 h, 6.2B</text>
+<path d="M 625,107 L 665,107" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 655.0,111.5 L 665,107 L 655.0,102.5" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<rect x="880" y="60" width="175" height="95" rx="8" fill="#a5d8ff" stroke="none"/>
+<path d="M 880.7,60.4 L 1054.1,59.1 L 1055.8,154.6 L 879.0,156.0 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="967.5" y="95.3" font-size="14" text-anchor="middle" fill="#1e1e1e">stage 1</text>
+<text x="967.5" y="112.4" font-size="14" text-anchor="middle" fill="#1e1e1e">learn to speak</text>
+<text x="967.5" y="129.5" font-size="14" text-anchor="middle" fill="#1e1e1e">(mono)</text>
+<path d="M 840,107 L 880,107" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 870.0,111.5 L 880,107 L 870.0,102.5" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 967,155 L 967,185 L 107,185 L 107,215" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 102.5,205.0 L 107,215 L 111.5,205.0" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<rect x="20" y="215" width="170" height="95" rx="8" fill="#a5d8ff" stroke="none"/>
+<path d="M 19.4,215.5 L 190.5,214.9 L 189.7,309.3 L 19.8,309.9 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="105.0" y="250.3" font-size="14" text-anchor="middle" fill="#1e1e1e">stage 2</text>
+<text x="105.0" y="267.4" font-size="14" text-anchor="middle" fill="#1e1e1e">learn to converse</text>
+<text x="105.0" y="284.5" font-size="14" text-anchor="middle" fill="#1e1e1e">5,743 h</text>
+<rect x="220" y="215" width="170" height="95" rx="8" fill="#a5d8ff" stroke="none"/>
+<path d="M 220.4,216.0 L 389.5,214.6 L 390.7,309.7 L 219.4,309.2 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="305.0" y="250.3" font-size="14" text-anchor="middle" fill="#1e1e1e">stage 3</text>
+<text x="305.0" y="267.4" font-size="14" text-anchor="middle" fill="#1e1e1e">keep going</text>
+<text x="305.0" y="284.5" font-size="14" text-anchor="middle" fill="#1e1e1e">to 5.65 passes</text>
+<path d="M 190,262 L 220,262" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 210.0,266.5 L 220,262 L 210.0,257.5" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<rect x="420" y="215" width="170" height="95" rx="8" fill="#b2f2bb" stroke="none"/>
+<path d="M 419.7,215.4 L 591.0,213.9 L 590.1,310.6 L 419.5,309.6 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="505.0" y="250.3" font-size="14" text-anchor="middle" fill="#1e1e1e">caramel-1</text>
+<text x="505.0" y="267.4" font-size="14" text-anchor="middle" fill="#1e1e1e">413.2M params</text>
+<text x="505.0" y="284.5" font-size="14" text-anchor="middle" fill="#1e1e1e">released</text>
+<path d="M 390,262 L 420,262" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 410.0,266.5 L 420,262 L 410.0,257.5" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<rect x="620" y="215" width="170" height="95" rx="8" fill="#d0bfff" stroke="none"/>
+<path d="M 620.3,214.4 L 789.1,214.8 L 790.9,310.6 L 619.5,310.3 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="705.0" y="250.3" font-size="14" text-anchor="middle" fill="#1e1e1e">synthetic pretrain</text>
+<text x="705.0" y="267.4" font-size="14" text-anchor="middle" fill="#1e1e1e">random voices</text>
+<text x="705.0" y="284.5" font-size="14" text-anchor="middle" fill="#1e1e1e">(not trained)</text>
+<path d="M 590,262 L 620,262" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 610.0,266.5 L 620,262 L 610.0,257.5" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<rect x="820" y="215" width="170" height="95" rx="8" fill="#d0bfff" stroke="none"/>
+<path d="M 820.9,213.8 L 989.5,213.9 L 989.3,310.4 L 818.9,310.8 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="905.0" y="250.3" font-size="14" text-anchor="middle" fill="#1e1e1e">JOSIE SFT</text>
+<text x="905.0" y="267.4" font-size="14" text-anchor="middle" fill="#1e1e1e">--no_swap</text>
+<text x="905.0" y="284.5" font-size="14" text-anchor="middle" fill="#1e1e1e">(running)</text>
+<path d="M 790,262 L 820,262" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 810.0,266.5 L 820,262 L 810.0,257.5" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<rect x="1020" y="215" width="170" height="95" rx="8" fill="#ffc9c9" stroke="none"/>
+<path d="M 1020.0,214.4 L 1190.7,215.3 L 1189.7,309.9 L 1020.9,309.7 Z" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="1105.0" y="250.3" font-size="14" text-anchor="middle" fill="#1e1e1e">RL: GRPO / DPO</text>
+<text x="1105.0" y="267.4" font-size="14" text-anchor="middle" fill="#1e1e1e">rl.py</text>
+<text x="1105.0" y="284.5" font-size="14" text-anchor="middle" fill="#1e1e1e">(not trained)</text>
+<path d="M 990,262 L 1020,262" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<path d="M 1010.0,266.5 L 1020,262 L 1010.0,257.5" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-linejoin="round"/>
+<text x="20.0" y="341.9" font-size="14" text-anchor="start" fill="#1e1e1e">grey/yellow/orange/teal: data; blue: pre-training (README); purple/red: post-training (this report)</text></svg>

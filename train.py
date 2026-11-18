@@ -90,7 +90,7 @@ def delay_window(raw, L, swap):
 # Each batch draws one window length L from BUCKETS and holds frames_per_batch // L windows, so the compiled graphs only ever
 # see 4 shapes. Stores are picked by weight, clips by length, and the window start uniformly. One background thread keeps
 # a few batches ready; a single producer keeps the stream deterministic, so a resumed run sees the same data.
-def batch_stream(dirs, fpb, weights, seed, rank, hours=0.0, world=1):
+def batch_stream(dirs, fpb, weights, seed, rank, hours=0.0, world=1, swap=True):
   rng = np.random.default_rng([seed, rank])
   stores = [StreamStore(d, seed, rank, world) if d.startswith("hf://") else TokenStore(d, hours) for d in dirs]
   sw = np.asarray(weights or [s.frames for s in stores], dtype=np.float64)
@@ -101,7 +101,7 @@ def batch_stream(dirs, fpb, weights, seed, rank, hours=0.0, world=1):
     while True:
       L, seqs = int(rng.choice(BUCKETS)), []
       for _ in range(max(1, fpb // L)):
-        seqs.append(delay_window(stores[rng.choice(len(stores), p=sw)].sample(rng, L), L, bool(rng.integers(2))))
+        seqs.append(delay_window(stores[rng.choice(len(stores), p=sw)].sample(rng, L), L, swap and bool(rng.integers(2))))
       q.put(np.stack(seqs))
 
   threading.Thread(target=produce, daemon=True).start()
@@ -109,12 +109,12 @@ def batch_stream(dirs, fpb, weights, seed, rank, hours=0.0, world=1):
 
 
 # fixed held-out windows (fixed seed), each scored in both speaker orders; same shape as a training bucket so graphs are reused
-def eval_batches(d, n=64, L=1500, bs=16, seed=12345):
+def eval_batches(d, n=64, L=1500, bs=16, seed=12345, swap=True):
   s = TokenStore.from_clips(list(hub_clips(d, "validation", shuffle=False))) if d.startswith("hf://") else TokenStore(d)
   rng, seqs = np.random.default_rng(seed), []
   for _ in range(n):
     raw = s.sample(rng, L)
-    seqs += [delay_window(raw, L, False), delay_window(raw, L, True)]
+    seqs += [delay_window(raw, L, False)] + ([delay_window(raw, L, True)] if swap else [])
   return [np.stack(seqs[k:k + bs]) for k in range(0, len(seqs), bs)]
 
 
@@ -184,10 +184,10 @@ def main(a):
 
   evaluate = mx.compile(model.__call__, inputs=model.state)
 
-  data = batch_stream(a.data, a.fpb, a.weights, a.seed + 7919 * start, rank, a.train_hours, world)
+  data = batch_stream(a.data, a.fpb, a.weights, a.seed + 7919 * start, rank, a.train_hours, world, not a.no_swap)
   end = a.stop_at or a.steps
   eval_at = (set(range(0, a.steps + 1, a.eval_every)) if a.eval_every else set()) | ({a.stop_at} if a.stop_at else set())
-  dev_batches = eval_batches(a.dev, bs=max(1, a.fpb // 1500)) if a.dev else []
+  dev_batches = eval_batches(a.dev, bs=max(1, a.fpb // 1500), swap=not a.no_swap) if a.dev else []
   log, evals, best = open(os.path.join(a.out, f"log_rank{rank}.jsonl"), "a"), [], []
 
   # every rank holds the same weights, so every rank computes the same dev loss and makes the same stop decision
@@ -252,6 +252,7 @@ if __name__ == "__main__":
   ap.add_argument("--lr", type=float, default=3e-4); ap.add_argument("--warmup", type=int, default=50)
   ap.add_argument("--wd", type=float, default=0.1); ap.add_argument("--clip", type=float, default=1.0)
   ap.add_argument("--seed", type=int, default=0)
+  ap.add_argument("--no_swap", action="store_true", help="train (and eval) only speaker A of each clip, e.g. the assistant in synthetic data; the other side is input only")
   ap.add_argument("--dev", default="", help="held-out store for dev loss (hf://<user>/<dataset> uses its validation split)")
   ap.add_argument("--eval_every", type=int, default=0); ap.add_argument("--patience", type=int, default=0); ap.add_argument("--save_best", action="store_true")
   ap.add_argument("--cfg", default="{}", help="json overrides for Config")

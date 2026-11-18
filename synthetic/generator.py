@@ -662,8 +662,11 @@ class SyntheticConversationGenerator:
 
     def generate(
         self, dataset: Any, *, max_samples: int | None = None,
-        retry_failed: bool = False, start: int = 0,
+        retry_failed: bool = False, start: int = 0, workers: int = 1,
     ) -> list[dict[str, Any]]:
+        """Generate episodes start..total. `workers` > 1 builds that many conversations at once in threads: their
+        teacher requests run in parallel while TTS and alignment take turns on the GPU. Results are recorded in
+        index order, exactly as with one worker."""
         from tqdm.auto import tqdm
 
         if max_samples is not None and max_samples < 1:
@@ -719,26 +722,44 @@ class SyntheticConversationGenerator:
             indexed_records[record["row_index"]] = record
         completed = sum(start <= index < total for index in indexed_records)
         tqdm.write(f"Resuming {self.output}: {completed} saved episodes reused.")
-        with tqdm(total=total - start, desc="Synthetic conversations", unit="episode") as bar:
-            for index in range(start, total):
+        from concurrent.futures import ThreadPoolExecutor
 
+        with tqdm(total=total - start, desc="Synthetic conversations", unit="episode") as bar, \
+                ThreadPoolExecutor(max_workers=max(1, workers)) as pool:
+
+            def build(index, seed_prompt):
                 def progress(turn, turns, phase, episode_index=index):
                     bar.set_postfix(
                         episode=episode_index, turn=f"{turn}/{turns}", phase=phase
                     )
+                try:
+                    return self.generate_episode(seed_prompt, index, progress=progress), None
+                except (TeacherTimeoutError, SpeechAlignmentError) as exc:
+                    return None, exc
+                except Exception as exc:   # one broken conversation must not stop the run: log it as skipped
+                    if workers <= 1:
+                        raise
+                    return None, TeacherTimeoutError(f"unexpected {type(exc).__name__}: {exc}")
 
+            futures = {}
+            for index in range(start, total):
                 seed_prompt = dataset[index]["prompt"]
                 if (index in teacher_failures and index not in indexed_records
                         and not retry_failed):
                     if teacher_failures[index]["seed_prompt"] != seed_prompt:
                         raise ValueError("failed episode does not match its prompt")
+                    continue
+                futures[index] = pool.submit(build, index, seed_prompt)
+            for index in range(start, total):
+                seed_prompt = dataset[index]["prompt"]
+                if index not in futures:
                     bar.set_postfix(episode=index, phase="previous timeout skipped")
                     bar.update(1)
                     continue
                 try:
-                    record = self.generate_episode(
-                        seed_prompt, index, progress=progress
-                    )
+                    record, failure = futures[index].result()
+                    if failure is not None:
+                        raise failure
                 except TeacherTimeoutError as exc:
                     teacher_failures[index] = {
                         "row_index": index, "seed_prompt": seed_prompt,

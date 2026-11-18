@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import threading
 import random
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -101,7 +102,7 @@ class PhononSpeech(AlignedSpeech):
     """Phonon synthesis + forced word alignment, cached on disk."""
 
     def __init__(self, cache_dir: str | Path, *, user_voice: PhononVoice | Sequence[PhononVoice],
-                 assistant_voice: PhononVoice,
+                 assistant_voice: PhononVoice | Sequence[PhononVoice],
                  model: str = DEFAULT_PHONON_MODEL, language: str = "en", temperature: float | None = None,
                  alignment_model: str = DEFAULT_ALIGNER_MODEL, alignment_language: str = "English",
                  min_alignment_match: float = 0.9, loaded_aligner_model: Any = None):
@@ -119,8 +120,14 @@ class PhononSpeech(AlignedSpeech):
         if not pool or not all(isinstance(v, PhononVoice) for v in pool):
             raise ValueError("user_voice must be a PhononVoice or a nonempty list of them")
         self.user_pool = pool
-        self.references = {"user": pool[0], "assistant": assistant_voice}
-        self.reference_ids = {role: v.identity() for role, v in self.references.items()}
+        apool = [assistant_voice] if isinstance(assistant_voice, PhononVoice) else list(assistant_voice)
+        if not apool or not all(isinstance(v, PhononVoice) for v in apool):
+            raise ValueError("assistant_voice must be a PhononVoice or a nonempty list of them")
+        if len(apool) > 1 and len({json.dumps(v.identity(), sort_keys=True) for v in apool + pool}) < 2:
+            raise ValueError("pretraining needs at least two distinct voices")
+        self.assistant_pool = apool   # one voice: fixed assistant (JOSIE); several: random per conversation (pretraining)
+        self.assistant_voice = apool[0]
+        self._episode = threading.local()   # each worker thread has its own conversation's user voice
         self._aligner_model = loaded_aligner_model
         self._tts = None
         self._voice_names: dict[str, str | None] = {}  # identity json -> Phonon voice name
@@ -131,13 +138,25 @@ class PhononSpeech(AlignedSpeech):
                 "alignment_model": self.alignment_model, "alignment_language": self.alignment_language,
                 "min_alignment_match": self.min_alignment_match, "sample_rate": self.sample_rate,
                 "voices": {"user": [v.identity() for v in self.user_pool],
-                           "assistant": self.reference_ids["assistant"]}}
+                           "assistant": ([v.identity() for v in self.assistant_pool] if len(self.assistant_pool) > 1
+                                         else self.reference_ids["assistant"])}}
+
+    @property
+    def references(self) -> dict[str, PhononVoice]:
+        return {"user": getattr(self._episode, "user", self.user_pool[0]),
+                "assistant": getattr(self._episode, "assistant", self.assistant_voice)}
+
+    @property
+    def reference_ids(self) -> dict[str, Any]:
+        return {role: v.identity() for role, v in self.references.items()}
 
     def begin_episode(self, rng: random.Random) -> None:
-        """Pick this conversation's user voice from the pool."""
-        voice = self.user_pool[rng.randrange(len(self.user_pool))]
-        self.references["user"] = voice
-        self.reference_ids["user"] = voice.identity()
+        """Pick this conversation's user voice from the pool (per thread, so parallel episodes don't mix voices)."""
+        self._episode.user = self.user_pool[rng.randrange(len(self.user_pool))]
+        if len(self.assistant_pool) > 1:   # pretraining: speaker A gets a random voice too, never the same as B
+            key = lambda v: json.dumps(v.identity(), sort_keys=True)
+            choices = [v for v in self.assistant_pool if key(v) != key(self._episode.user)]
+            self._episode.assistant = choices[rng.randrange(len(choices))]
 
     def episode_voices(self) -> dict[str, Any]:
         return dict(self.reference_ids)
@@ -155,11 +174,11 @@ class PhononSpeech(AlignedSpeech):
             import ptts
 
             self._tts = ptts.TTS(self.model, lang=self.language)
-            voices = [("user", v) for v in self.user_pool] + [("assistant", self.references["assistant"])]
+            voices = [("user", v) for v in self.user_pool] + [("assistant", v) for v in self.assistant_pool]
             for i, (role, voice) in enumerate(voices):
                 key = json.dumps(voice.identity(), sort_keys=True)
                 if key not in self._voice_names:
-                    self._voice_names[key] = self._register(role if role == "assistant" else f"user-{i}", voice)
+                    self._voice_names[key] = self._register(f"{role}-{i}", voice)
         return self._tts
 
     def _register(self, role: str, voice: PhononVoice) -> str | None:
