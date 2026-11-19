@@ -82,6 +82,16 @@ class ChatTeacher:
                 ) from exc
         return response.choices[0].message.content or ""
 
+    def _complete_once(self, model: str, messages: list[dict[str, str]], seed: int, json_mode: bool) -> str:
+        """One request, no retries (FallbackTeacher switches teacher instead of waiting); timeouts still skip."""
+        from openai import APITimeoutError
+        extra = {"response_format": {"type": "json_object"}} if json_mode else {}
+        try:
+            response = self.client.chat.completions.create(model=model, messages=messages, seed=seed, **extra)
+        except APITimeoutError as exc:
+            raise TeacherTimeoutError(f"Teacher {model!r} timed out") from exc
+        return response.choices[0].message.content or ""
+
     def generate(self, messages: list[dict[str, str]], *, seed: int) -> str:
         for attempt in range(2):   # a bad reply skips this conversation (logged), it must not stop the whole run
             content = self._complete(self.assistant_model, messages, seed + attempt, False).strip()
@@ -111,6 +121,69 @@ class ChatTeacher:
                 return random.Random(seed).choice(options)
             problem = "no follow-up prompts"
         raise TeacherTimeoutError(f"teacher {self.followup_model!r} gave {problem} twice")
+
+
+class FallbackTeacher(ChatTeacher):
+    """A primary teacher (e.g. OpenAI) that hands over to a fallback (e.g. Ollama Cloud) when the primary has no key,
+    no quota, no access to the model, or keeps failing. The primary is retried every `retry_after` seconds, and its key
+    is re-read from the environment / `key_file` each time, so adding a key while a run is going switches it over."""
+
+    def __init__(self, fallback: ChatTeacher, *, primary_model: str, key_file: str | None = None,
+                 base_url: str | None = None, timeout: float = 180.0, retry_after: float = 900.0):
+        super().__init__(None, assistant_model=primary_model)
+        self.fallback, self.primary_model, self.key_file = fallback, primary_model, key_file
+        self.base_url, self.timeout, self.retry_after = base_url, timeout, retry_after
+        self._primary, self._down_until, self._lock = None, 0.0, __import__("threading").Lock()
+        self.followup_prompt = fallback.followup_prompt
+
+    def metadata(self) -> dict[str, Any]:   # fixed, so switching teacher mid-run keeps the resume fingerprint
+        return {"type": "fallback", "primary": self.primary_model, "fallback": self.fallback.metadata()}
+
+    def _key(self) -> str | None:
+        import os
+        key = os.environ.get("OPENAI_API_KEY")
+        if not key and self.key_file and os.path.isfile(os.path.expanduser(self.key_file)):
+            for line in open(os.path.expanduser(self.key_file)):   # a .env file: OPENAI_API_KEY = sk-...
+                name, _, value = line.partition("=")
+                if name.strip() == "OPENAI_API_KEY" and value.strip():
+                    key = value.strip().strip("'\"")
+        return key
+
+    def _get_primary(self) -> ChatTeacher | None:
+        import time
+        with self._lock:
+            if time.time() < self._down_until:
+                return None
+            if self._primary is None:
+                key = self._key()
+                if not key:
+                    self._mark_down("no OPENAI_API_KEY")
+                    return None
+                from openai import OpenAI
+                client = OpenAI(api_key=key, base_url=self.base_url, timeout=self.timeout, max_retries=0)
+                self._primary = ChatTeacher(client, assistant_model=self.primary_model)
+                self._primary.followup_prompt = self.followup_prompt
+                print(f"[teacher] using {self.primary_model}", flush=True)
+            return self._primary
+
+    def _mark_down(self, why: str) -> None:
+        import time
+        if time.time() >= self._down_until:
+            print(f"[teacher] {self.primary_model} unavailable ({why}); using fallback for {self.retry_after / 60:.0f} min", flush=True)
+        self._down_until, self._primary = time.time() + self.retry_after, None
+
+    def _complete(self, model: str, messages: list[dict[str, str]], seed: int, json_mode: bool) -> str:
+        primary = self._get_primary()
+        if primary is not None:
+            import openai
+            try:
+                return primary._complete_once(self.primary_model, messages, seed, json_mode)
+            except (openai.AuthenticationError, openai.PermissionDeniedError, openai.NotFoundError,
+                    openai.BadRequestError, openai.RateLimitError, openai.APIStatusError, openai.APIConnectionError) as exc:
+                with self._lock:
+                    self._mark_down(f"{type(exc).__name__}: {str(exc)[:120]}")
+        fb_model = self.fallback.followup_model if json_mode else self.fallback.assistant_model
+        return self.fallback._complete(fb_model, messages, seed, json_mode)
 
 
 class MLXTeacher(ChatTeacher):

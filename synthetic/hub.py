@@ -49,9 +49,11 @@ def _skip_reasons(generator, indices, uploaded: set[str], min_seconds: float) ->
 
 def generate_to_hub(generator, dataset, repo_id: str, *, chunk_size: int = 100, max_samples: int | None = None,
                     min_seconds: float = 10.0, speech_cache: str | Path | None = None, private: bool = True,
-                    workers: int = 1):
-    """`workers` conversations are built at once (see SyntheticConversationGenerator.generate); use
-    chunk_size >= workers, since workers only run in parallel within one chunk."""
+                    workers: int = 1, chunks_at_once: int = 1, include_partial: bool = False):
+    """`workers` conversations are built at once (see SyntheticConversationGenerator.generate). `chunks_at_once`
+    consecutive pending chunks are generated together (so workers can exceed chunk_size without changing the chunk
+    numbering of an existing repo), then tokenized and uploaded one chunk at a time. `include_partial` keeps the
+    finished turns of a conversation that failed later (useful for long conversations)."""
     import pyarrow as pa, pyarrow.parquet as pq
     from huggingface_hub import HfApi
     from prepare import SR, encode_long, load_mimi, render
@@ -65,15 +67,25 @@ def generate_to_hub(generator, dataset, repo_id: str, *, chunk_size: int = 100, 
         meta = {"width": 16, "frames": {"train": 0, "validation": 0}, "chunks": []}
     total = len(dataset) if max_samples is None else min(len(dataset), max_samples)
     mimi = load_mimi()
-    for chunk, start in enumerate(range(0, total, chunk_size)):
-        if chunk in meta["chunks"]:
-            continue
-        generator.generate(dataset, start=start, max_samples=min(start + chunk_size, total), workers=workers)
-        write_caramel_manifests(out, min_seconds=min_seconds)   # only episodes whose audio is still on disk
+    pending = [(c, s) for c, s in enumerate(range(0, total, chunk_size)) if c not in meta["chunks"]]
+    groups, i = [], 0
+    while i < len(pending):   # runs of consecutive chunks, at most chunks_at_once long
+        g = [pending[i]]
+        while len(g) < chunks_at_once and i + len(g) < len(pending) and pending[i + len(g)][0] == g[-1][0] + 1:
+            g.append(pending[i + len(g)])
+        groups.append(g); i += len(g)
+    for group in groups:
+      g_start, g_end = group[0][1], min(group[-1][1] + chunk_size, total)
+      generator.generate(dataset, start=g_start, max_samples=g_end, workers=workers)
+      write_caramel_manifests(out, min_seconds=min_seconds, include_partial=include_partial)   # episodes still on disk
+      for chunk, start in group:
+        end = min(start + chunk_size, total)
         uploaded = set()
         for split in ("train", "validation"):
             rows = []
             for name, x in render(out / f"caramel_{split}.jsonl"):
+                if not start <= int(name.rsplit("_", 1)[-1]) < end:   # this chunk's conversations only
+                    continue
                 if x.shape[1] >= min_seconds * SR:
                     tok = encode_long(mimi, x)
                     rows.append({"id": name, "width": tok.shape[1], "frames": len(tok), "tokens": tok.tobytes()})
@@ -91,11 +103,11 @@ def generate_to_hub(generator, dataset, repo_id: str, *, chunk_size: int = 100, 
         meta["chunks"].append(chunk)
         api.upload_file(path_or_fileobj=json.dumps(meta, indent=2).encode(), path_in_repo="meta.json",
                         repo_id=repo_id, repo_type="dataset", commit_message=f"chunk {chunk} done")
-        for episode in (out / "episodes").iterdir():   # keep annotations.json as the resume marker
-            for f in episode.iterdir():
-                if f.name != "annotations.json":
-                    f.unlink() if f.is_file() else shutil.rmtree(f)
-        if speech_cache:
-            shutil.rmtree(speech_cache, ignore_errors=True); Path(speech_cache).mkdir(parents=True, exist_ok=True)
         print(f"chunk {chunk} uploaded to {repo_id}: {meta['frames']['train'] / 12.5 / 3600:.2f} h train", flush=True)
+      for episode in (out / "episodes").iterdir():   # whole group uploaded: keep annotations.json as the resume marker
+          for f in episode.iterdir():
+              if f.name != "annotations.json":
+                  f.unlink() if f.is_file() else shutil.rmtree(f)
+      if speech_cache:
+          shutil.rmtree(speech_cache, ignore_errors=True); Path(speech_cache).mkdir(parents=True, exist_ok=True)
     return meta

@@ -86,6 +86,7 @@ def _barge_in_anchor_end(
 @dataclass(frozen=True)
 class SyntheticConfig:
     max_turns: int = 8
+    min_turns: int = 2   # turns are drawn uniformly from [min_turns, max_turns]
     barge_in_probability: float = 0.2
     assistant_stop_ms: int = 1000
     assistant_fade_ms: int = 180
@@ -111,6 +112,8 @@ class SyntheticConfig:
     def __post_init__(self):
         if type(self.max_turns) is not int or self.max_turns < 2:
             raise ValueError("max_turns must be at least 2")
+        if type(self.min_turns) is not int or not 2 <= self.min_turns <= self.max_turns:
+            raise ValueError("min_turns must lie in [2, max_turns]")
         if not 0 <= self.barge_in_probability <= 1:
             raise ValueError("barge-in probability must lie in [0,1]")
         if (
@@ -230,7 +233,7 @@ class SyntheticConversationGenerator:
         rng = random.Random(episode_seed)
         if hasattr(self.speech, "begin_episode"):  # per-conversation user voice (Phonon pool)
             self.speech.begin_episode(random.Random(episode_seed ^ 0x5EED_FACE))
-        turns = rng.randint(2, self.config.max_turns)
+        turns = rng.randint(self.config.min_turns, self.config.max_turns)
         history = [{"role": "system", "content": self.config.system_prompt}]
         utterances = []
         barge_ins = []
